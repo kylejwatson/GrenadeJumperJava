@@ -6,6 +6,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.paint.Color;
 
 public class TestPlayer extends PhysicsObject {
 	private double px = 0;
@@ -21,6 +22,7 @@ public class TestPlayer extends PhysicsObject {
 	}
 
 	public void update(GraphicsContext gc){
+		this.gc = gc;
 		double vecx = 500 - mx;
 		double vecy = 315 - my;
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
@@ -31,6 +33,15 @@ public class TestPlayer extends PhysicsObject {
 		px = x+vecx*50;
 		py = y+vecy*50;
 		gc.strokeLine(x, y, px, py);
+		for(double[] line : lines)
+		{
+			gc.setStroke(Color.RED);
+			double[] linePoint = detectLineCollision(new double[]{x,y,px,py},line);
+			if(linePoint != null){
+				gc.strokeOval(linePoint[0]-3, linePoint[1]-3, 6, 6);
+				//System.out.println(linePoint[0]);
+			}
+		}
 		super.update(gc);
 	}
 
@@ -102,7 +113,7 @@ public class TestPlayer extends PhysicsObject {
 		vecy = vecy/dist;
 		vecx = -vecx;
 		vecy = -vecy;
-		Grenade g = new Grenade(x+vecx*(radius+8), y+vecy*(radius+8),list,delList,lines);
+		Grenade g = new Grenade(x,y,list,delList,lines);
 		if(me.getButton() == MouseButton.PRIMARY){
 			g.addVelocity(vecx*10, vecy*10);
 			list.add(g);

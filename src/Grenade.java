@@ -53,7 +53,7 @@ public class Grenade extends PhysicsObject {
 			for(double[] line : lines){
 				double[] point = detectCircle(line);
 				if(point != null){
-					delLines.add(line);
+					//delLines.add(line);
 				}
 			}
 			for(double[] line : delLines){

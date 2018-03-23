@@ -5,7 +5,7 @@ import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
 public class PhysicsObject extends GameObject{
-	private GraphicsContext gc;
+	protected GraphicsContext gc;
 	private static final double GRAV = 0.3;
 	private static final double FRIC = 0.3;
 	protected double velx = 0;
@@ -26,24 +26,26 @@ public class PhysicsObject extends GameObject{
 		vely += GRAV;
 		if(Math.abs(velx)<0.3)
 			velx = 0;
-		
+		double fullVel = Math.sqrt(velx*velx + vely*vely);
+		if(Math.abs(fullVel) > 10){
+			velx *= 10/fullVel;
+			vely *= 10/fullVel;
+		}
 		x += velx;
 		y += vely;
+		gc.setStroke(Color.BLUE);
+		gc.strokeLine(x, y, x+velx, y+vely);
 
 		collisionResolution();
-		for(int i = 0; i< lines.size(); i++)
-		{
-			gc.setStroke(Color.RED);
-			double[] point = closestPoint(lines.get(i));
-			//gc.strokeLine(x, y, point[0], point[1]);
-		}
+		
+		
 		super.update(gc);
 		//gc.fillOval(x-radius, y-radius, radius*2, radius*2);
 	}
 
 	private void collisionResolution(){
-		for(int i = 0; i< lines.size(); i++){
-			double[] point = detectCircle(lines.get(i));
+		for(double[] line : lines){
+			double[] point = detectCircle(line);
 			
 			if(point != null){
 				double xvec = point[0] - x;
@@ -68,11 +70,20 @@ public class PhysicsObject extends GameObject{
 		double[] point = closestPoint(line);
 		double lenx = Math.abs(x-point[0]);
 		double leny = Math.abs(y-point[1]);
-	
 		if(Math.sqrt(lenx*lenx + leny*leny) <= radius)
 			return point;
-		else
-			return null;
+
+		if(Math.sqrt(velx*velx + vely*vely)>radius){
+			double[] linePoint = detectLineCollision(new double[]{x-velx,y-vely,x+velx*2,y+vely*2},line);
+			if(linePoint!=null){
+				System.out.println("x: " + linePoint[0] + " y: " + linePoint[1]);
+				//velx = -velx;
+				//vely = -vely;
+			}
+			
+			//return linePoint;
+		}
+		return null;
 	}
 	
 	protected double[] circleIntersect(double[] line){
@@ -156,11 +167,15 @@ public class PhysicsObject extends GameObject{
 		if(det != 0){
 			double xpo = (B2*C1 - B1*C2)/det;
 			double ypo = (A1*C2 - A2*C1)/det;
-			if(x >= Math.min(x1,x2) && x <= Math.max(x1,x2) &&
-				x >= Math.min(x3,x4) && x <= Math.max(x3,x4) &&
-				y >= Math.min(y1,y2) && y <= Math.max(y1,y2) &&
-				y >= Math.min(y3,y4) && y <= Math.max(y3,y4))
+			
+			if(xpo >= Math.min(x1,x2) && xpo <= Math.max(x1,x2) &&
+				xpo >= Math.min(x3,x4) && xpo <= Math.max(x3,x4) &&
+				ypo >= Math.min(y1,y2) && ypo <= Math.max(y1,y2) &&
+				ypo >= Math.min(y3,y4) && ypo <= Math.max(y3,y4)){
+
+				gc.strokeOval(xpo-3, ypo-3, 6, 6);
 				return new double[]{xpo,ypo};
+			}
 		}
 		return null;
 	}
@@ -192,39 +207,6 @@ public class PhysicsObject extends GameObject{
 		return false;
 	}
 	
-	/*public void collisionCorrection(){
-		double biggestVecx=0;
-		double biggestVecy=0;
-		double biggestDist = 3*radius;
-		double biggestRadius = 0;
-		for(GameObject go : list){
-			if(go != this && !(go instanceof Grenade)){
-				double vecx = x-go.x;
-				double vecy = y-go.y;
-				double dist = Math.abs(Math.sqrt(Math.pow(vecx, 2)+Math.pow(vecy, 2)));
-				if(dist<biggestDist){
-					biggestDist = dist;
-					biggestVecx = vecx;
-					biggestVecy = vecy;
-					biggestRadius = go.radius;
-				}
-			}
-		}
-		if(biggestDist < radius+biggestRadius){
-			double l =radius+biggestRadius-biggestDist;
-			
-			velx = l*biggestVecx/Math.abs(biggestVecx);
-			double yCor = l*biggestVecy/Math.abs(biggestVecy);
-			y += yCor;
-			if(feetOnGround() || headOnCeil()){
-				vely = yCor/2;
-			}
-			
-			x += velx;
-			velx =0;
-		}
-	}*/
-
 	public void addVelocity(double newVelx, double newVely) {
 		velx += newVelx;
 		vely += newVely;

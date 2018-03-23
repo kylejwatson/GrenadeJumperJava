@@ -86,10 +86,20 @@ public class Player extends PhysicsObject {
 		vecy = vecy/dist;
 		vecx = -vecx;
 		vecy = -vecy;
-		for(GameObject go : list){
-			
+		dist = radius+8;
+		System.out.println(dist);
+		for(double[] line : lines){
+			double[] point = detectLineCollision(new double[]{x+vecx*dist,y+vecy*dist},line);
+			if(point != null){
+				double newDist = Math.sqrt((point[0]-x)*(point[0]-x)+(point[1]-y)*(point[1]-y));
+				//if(newDist<dist)
+					dist = newDist;
+			}
 		}
-		Grenade g = new Grenade(x+vecx*(radius+8), y+vecy*(radius+8),list,delList,lines);
+		System.out.println(dist);
+		Grenade g = new Grenade(x+vecx*dist, y+vecy*dist,list,delList,lines);
+		
+		
 		if(me.getButton() == MouseButton.PRIMARY)
 			g.addVelocity(vecx*10, vecy*10);
 		else
