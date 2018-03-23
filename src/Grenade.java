@@ -8,7 +8,7 @@ public class Grenade extends PhysicsObject {
 	private static final float DETONATE_TIME = 1F;
 	private static final float BLAST_RADIUS = 90F;
 	private static final double EXPLOSION_FORCE = 10F;
-	private static final float GRAPHICS_DELAY = 0.5F;
+	private static final float GRAPHICS_DELAY = 0.1F;
 	private float timer = 0f;
 	private float gfxTimer = 0f;
 	public Grenade(double x, double y, ArrayList<GameObject> list, ArrayList<GameObject> delList, ArrayList<double[]> lines) {
@@ -32,6 +32,8 @@ public class Grenade extends PhysicsObject {
 	
 	private void explode(){
 		if(gfxTimer == 0f){
+
+			gfxTimer += 0.02;
 			for(GameObject obj:list){
 				double dist = getDistance(obj);
 				if(dist <BLAST_RADIUS && obj != this){
@@ -42,13 +44,23 @@ public class Grenade extends PhysicsObject {
 						double newVelx = EXPLOSION_FORCE*vecx/dist;
 						double newVely = EXPLOSION_FORCE*vecy/dist;
 						physObj.addVelocity(newVelx,newVely);
-					}else{
-						if(dist<BLAST_RADIUS/2)
-							delList.add(obj);
 					}
 				}
-				gfxTimer += 0.02;
 			}
+			ArrayList<double[]> delLines = new ArrayList<double[]>();
+			double oRadius = radius;
+			radius = BLAST_RADIUS/2;
+			for(double[] line : lines){
+				double[] point = detectCircle(line);
+				if(point != null){
+					delLines.add(line);
+				}
+			}
+			for(double[] line : delLines){
+				lines.remove(line);
+			}
+			radius = oRadius;
+			
 		}else{
 			gfxTimer += 0.02;
 			if(gfxTimer>GRAPHICS_DELAY)

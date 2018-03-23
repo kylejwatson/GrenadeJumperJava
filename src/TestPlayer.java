@@ -12,16 +12,17 @@ public class TestPlayer extends PhysicsObject {
 	private double py = 0 ;
 	private double mx = 0;
 	private double my = 0 ;
-	private double speed = 3;
-	private double jump = 5;
+	private static final float SPEED = 4;
+	private static final float JUMP = 5;
+	private static final double MAX_SPEED = 5;
 	public TestPlayer(double x, double y, ArrayList<GameObject>list,ArrayList<GameObject>delList, ArrayList<double[]> lines) {
 		super(new Image("/res/char.png"),x,y,list,delList,lines);
 		// TODO Auto-generated constructor stub
 	}
-	
+
 	public void update(GraphicsContext gc){
-		double vecx = x - mx;
-		double vecy = y - my;
+		double vecx = 500 - mx;
+		double vecy = 315 - my;
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
 		vecx = vecx/dist;
 		vecy = vecy/dist;
@@ -32,46 +33,84 @@ public class TestPlayer extends PhysicsObject {
 		gc.strokeLine(x, y, px, py);
 		super.update(gc);
 	}
-	
+
 	public void keyInput(boolean a,boolean d,boolean s,boolean w, int wHeld){
-		if(a)
-			x -= speed;
-		if(d)
-			x += speed;
-		if(w)
-			vely -= speed/10;
-		if(s)
-			y += speed;
-		
-		//if(w)
-			//y -= speed;
+		radius /= 2;
+		if(a){
+			boolean moveable = true;
+			x-=radius+1;
+			for(int i = 0; i< lines.size(); i++){
+				double[] point = detectCircle(lines.get(i));
+				if(point != null){
+					moveable = false;
+					break;
+				}
+			}
+			x+=radius+1;
+			if(moveable){
+				if(velx - SPEED > -MAX_SPEED)
+					velx -= SPEED;
+				else
+					velx = -MAX_SPEED;
+			}
+		}
+		if(d){
+			boolean moveable = true;
+			x+=radius+1;
+			for(int i = 0; i< lines.size(); i++){
+				double[] point = detectCircle(lines.get(i));
+				if(point != null){
+					moveable = false;
+					break;
+				}
+			}
+			x-=radius+1;
+			if(moveable){
+				if(velx + SPEED < MAX_SPEED)
+					velx += SPEED;
+				else
+					velx = MAX_SPEED;
+			}
+		}
+		if(w){
+			y+=radius+1;
+			for(int i = 0; i< lines.size(); i++){
+				double[] point = detectCircle(lines.get(i));
+				if(point != null){
+					if(point[1] > y){
+						vely -= JUMP;
+						break;
+					}
+				}
+			}
+			y-=radius+1;
+		}
+		radius *= 2;
 	}
-	
+
 
 	public void mouseMove(MouseEvent me){
 		mx = me.getX();
 		my = me.getY();		
 	}
-	
+
 	public void mouseDown(MouseEvent me){
-		double vecx = x - me.getX();
-		double vecy = y - me.getY();
+		double vecx = 500 - me.getX();
+		double vecy = 315 - me.getY();
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
 		vecx = vecx/dist;
 		vecy = vecy/dist;
 		vecx = -vecx;
 		vecy = -vecy;
-		for(GameObject go : list){
-			
-		}
 		Grenade g = new Grenade(x+vecx*(radius+8), y+vecy*(radius+8),list,delList,lines);
-		if(me.getButton() == MouseButton.PRIMARY)
+		if(me.getButton() == MouseButton.PRIMARY){
 			g.addVelocity(vecx*10, vecy*10);
-		else
-			g.addVelocity(vecx*5, vecy*5);
-		list.add(g);
+			list.add(g);
+		}
+		//else
+			//g.addVelocity(vecx*5, vecy*5);
 	}
-	
+
 	public void input(Event e){
 	}
 

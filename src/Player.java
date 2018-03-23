@@ -79,8 +79,8 @@ public class Player extends PhysicsObject {
 	
 	public void mouseDown(MouseEvent me){
 		//CHECK IF SPAWN LINE INTERSECTS DIRT BLOCK
-		double vecx = x - me.getX();
-		double vecy = y - me.getY();
+		double vecx = 500 - me.getX();
+		double vecy = 315 - me.getY();
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
 		vecx = vecx/dist;
 		vecy = vecy/dist;
