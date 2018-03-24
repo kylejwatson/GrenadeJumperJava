@@ -13,12 +13,13 @@ public class TestPlayer extends PhysicsObject {
 	private double py = 0 ;
 	private double mx = 0;
 	private double my = 0 ;
+	private ArrayList<Double> polyMat;
 	private static final float SPEED = 4;
 	private static final float JUMP = 5;
 	private static final double MAX_SPEED = 5;
-	public TestPlayer(double x, double y, ArrayList<GameObject>list,ArrayList<GameObject>delList, ArrayList<double[]> lines) {
+	public TestPlayer(double x, double y, ArrayList<GameObject>list,ArrayList<GameObject>delList, ArrayList<double[]> lines, ArrayList<Double> polyMat) {
 		super(new Image("/res/char.png"),x,y,list,delList,lines);
-		// TODO Auto-generated constructor stub
+		this.polyMat = polyMat;
 	}
 
 	public void update(GraphicsContext gc){
@@ -125,7 +126,7 @@ public class TestPlayer extends PhysicsObject {
 		vecy = vecy/dist;
 		vecx = -vecx;
 		vecy = -vecy;
-		Grenade g = new Grenade(x,y,list,delList,lines);
+		Grenade g = new Grenade(x,y,list,delList,lines,polyMat);
 		if(me.getButton() == MouseButton.PRIMARY){
 			g.addVelocity(vecx*10, vecy*10);
 			list.add(g);

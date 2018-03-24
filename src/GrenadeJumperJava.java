@@ -1,34 +1,24 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.InputStream;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Random;
 import java.util.Scanner;
 
-import com.sun.javafx.scene.paint.GradientUtils.Point;
-
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
-import javafx.scene.control.Label;
-import javafx.scene.control.Slider;
 import javafx.scene.image.Image;
-import javafx.scene.input.ContextMenuEvent;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
-import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
 public class GrenadeJumperJava extends Application {
@@ -39,10 +29,11 @@ public class GrenadeJumperJava extends Application {
 	private ArrayList<Double> newPoly = new ArrayList<Double>();
 	private ArrayList<double[]> lines = new ArrayList<double[]>();
 	private ArrayList<GameObject> list = new ArrayList<GameObject>();
-	private ArrayList<PhysicsObject> physList = new ArrayList<PhysicsObject>();
+	private ArrayList<Double> polyMat = new ArrayList<Double>();
 	private ArrayList<GameObject> delList = new ArrayList<GameObject>();
 	private TestPlayer player;
 	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.png"),3,8,15,15,false);
+	private Double curMaterial = 3D;
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
@@ -69,26 +60,32 @@ public class GrenadeJumperJava extends Application {
 			for(int i =0; i <newPoly.size() -1; i+=2){
 				gc.strokeOval(newPoly.get(i)-3, newPoly.get(i+1)-3, 6, 6);
 			}
-			
-			for(double[] poly : lines){
+			int polyCount = 0;
+			for(int k=0; k<lines.size(); k++){
+				double[] poly = lines.get(k);
+				polyCount += poly.length/2;
 				gc.beginPath();
 				gc.moveTo(poly[0], poly[1]);
+				//gc.strokeOval(poly[0]-3, poly[1]-3, 6, 6);
 				for(int i=2; i < poly.length -1; i+=2){
-					int i2 = i+1; 
-					if(i2 == poly.length)
-						i2 = 0;
+					int i2 = i+1;
 					gc.lineTo(poly[i], poly[i2]);
+					//gc.strokeOval(poly[i]-3, poly[i2]-3, 6, 6);
 				}
-				gc.lineTo(poly[0], poly[1]);
 				gc.closePath();
-				gc.setFill(dirt);
+				if(polyMat.get(k)>3)
+					gc.setFill(Color.GRAY);
+				else if(polyMat.get(k)>2)
+					gc.setFill(Color.BROWN);
+				else
+					gc.setFill(dirt);
 				gc.fill();
 				gc.setFill(Color.BLACK);
 			}
 			gc.restore();
+			gc.strokeText("Edge Count: " + polyCount, 30, 30);
 		} 
 	};
-	
 	
 	private EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>(){
 		@Override
@@ -97,14 +94,17 @@ public class GrenadeJumperJava extends Application {
 			double my = mouseEvent.getY() +player.y-gc.getCanvas().getHeight()/2;
 			if(drawing){
 				if(mouseEvent.getButton() == MouseButton.PRIMARY){
-					newPoly.add(mx);
-					newPoly.add(my);
+					if(newPoly.isEmpty() || newPoly.get(newPoly.size()-1) != my && newPoly.get(newPoly.size()-2) != mx){
+						newPoly.add(mx);
+						newPoly.add(my);
+					}
 				}else if(mouseEvent.getButton() == MouseButton.SECONDARY){
 					if(!newPoly.isEmpty()){
 						double[] arr = new double[newPoly.size()];
 						for(int i =0; i<arr.length;i++)
 							arr[i] = newPoly.get(i).doubleValue();
 						lines.add(arr);
+						polyMat.add(curMaterial);
 						newPoly.clear();						
 					}
 					drawing = false;
@@ -124,6 +124,7 @@ public class GrenadeJumperJava extends Application {
 		}
 	};
 	private EventHandler<KeyEvent> keyDownHandler = new EventHandler<KeyEvent>(){
+
 
 		@Override
 		public void handle(KeyEvent arg0) {
@@ -145,7 +146,8 @@ public class GrenadeJumperJava extends Application {
 
 				double  x = rand.nextDouble()*1000;
 				double  y = rand.nextDouble()*630;
-				list.add(new TestPlayer(x, y, list, delList, lines));
+				list.add(new Grenade(x, y, list, delList, lines, polyMat));
+			//case 1 2 and 3 for material
 			default:
 				System.out.println("not player key");
 			}
@@ -190,7 +192,9 @@ public class GrenadeJumperJava extends Application {
 				System.out.println("Err: FileNotFoundException");
 			}
 			if(pWriter != null){
-				for(double[] poly : lines){
+				for(int i =0; i < lines.size(); i++){
+					pWriter.println(polyMat.get(i));
+					double[] poly = lines.get(i);
 					pWriter.println();
 					for(double pos:poly){
 						pWriter.print(pos + ",");
@@ -225,16 +229,20 @@ public class GrenadeJumperJava extends Application {
 				//If the scanner loaded correctly read all the lines
 				String myLine = fileScanner.nextLine();
 				Scanner lineScanner = new Scanner(myLine);
-				lineScanner.useDelimiter(",");
-				ArrayList<Double> newLine = new ArrayList<Double>();
-				while(lineScanner.hasNext()){
-					newLine.add(lineScanner.nextDouble());
+				if(lines.size() == polyMat.size())
+					polyMat.add(lineScanner.nextDouble());
+				else{
+					lineScanner.useDelimiter(",");
+					ArrayList<Double> newLine = new ArrayList<Double>();
+					while(lineScanner.hasNext()){
+						newLine.add(lineScanner.nextDouble());
+					}
+					lineScanner.close();
+					double[] arr = new double[newLine.size()];
+					for(int i =0; i<arr.length;i++)
+						arr[i] = newLine.get(i).doubleValue();
+					lines.add(arr);
 				}
-				lineScanner.close();
-				double[] arr = new double[newLine.size()];
-				for(int i =0; i<arr.length;i++)
-					arr[i] = newLine.get(i).doubleValue();
-				lines.add(arr);
 			}
 			if(!lines.isEmpty())
 				lines.remove(0);
@@ -271,7 +279,7 @@ public class GrenadeJumperJava extends Application {
 		scene.setOnKeyPressed(keyDownHandler);
 		scene.setOnKeyReleased(keyUpHandler);
 		
-		player = new TestPlayer(100,100,list,delList,lines);
+		player = new TestPlayer(100,100,list,delList,lines,polyMat);
 		list.add(player);
 		timer.start();
 

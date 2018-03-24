@@ -74,12 +74,14 @@ public class PhysicsObject extends GameObject{
 
 	protected double[] detectCircle(double[] line){
 		double[] point = closestPoint(line);
+		if(point == null)
+			return null;
 		double lenx = Math.abs(x-point[0]);
 		double leny = Math.abs(y-point[1]);
 		if(Math.sqrt(lenx*lenx + leny*leny) <= radius)
 			return point;
 
-		if(Math.sqrt(velx*velx + vely*vely)>radius){
+		/*if(Math.sqrt(velx*velx + vely*vely)>radius){
 			double[] linePoint = detectLineCollision(new double[]{x-velx,y-vely,x+velx*2,y+vely*2},line);
 			if(linePoint!=null){
 				System.out.println("x: " + linePoint[0] + " y: " + linePoint[1]);
@@ -88,7 +90,7 @@ public class PhysicsObject extends GameObject{
 			}
 			
 			//return linePoint;
-		}
+		}*/
 		return null;
 	}
 	

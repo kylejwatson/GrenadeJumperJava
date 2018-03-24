@@ -12,9 +12,10 @@ public class Grenade extends PhysicsObject {
 	private static final float GRAPHICS_DELAY = 0.1F;
 	private float timer = 0f;
 	private float gfxTimer = 0f;
-	public Grenade(double x, double y, ArrayList<GameObject> list, ArrayList<GameObject> delList, ArrayList<double[]> lines) {
+	private ArrayList<Double> polyMat;
+	public Grenade(double x, double y, ArrayList<GameObject> list, ArrayList<GameObject> delList, ArrayList<double[]> lines, ArrayList<Double> polyMat) {
 		super(new Image("/res/gren.png"), x, y, list,delList,lines);
-		
+		this.polyMat = polyMat;
 		radius = 10;
 		// TODO Auto-generated constructor stub
 	}
@@ -26,7 +27,7 @@ public class Grenade extends PhysicsObject {
 			explode();
 			if(gfxTimer != 0){
 				gc.setFill(Color.YELLOW);
-				gc.fillOval(x-BLAST_RADIUS/2, y-BLAST_RADIUS/2, BLAST_RADIUS, BLAST_RADIUS);
+				gc.fillOval(x-BLAST_RADIUS, y-BLAST_RADIUS, BLAST_RADIUS*2, BLAST_RADIUS*2);
 			}
 		}
 	}
@@ -48,54 +49,68 @@ public class Grenade extends PhysicsObject {
 					}
 				}
 			}
-			ArrayList<Integer> delLines = new ArrayList<Integer>();
-			double oRadius = radius;
-			radius = BLAST_RADIUS/2;
-			ArrayList<double[]> addList = new ArrayList<double[]>();
-			ArrayList<double[]> remList = new ArrayList<double[]>();
-			System.out.println("1: " + lines.size());
 			for(double[] poly : lines){
-				for(int i=0; i < poly.length -2; i+=2){
-					int i2 = i+2;
-					double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
-					double[] point = detectCircle(line);
-					if(point != null){
-						delLines.add(i);
-						delLines.add(i+1);
+				int polyI = lines.indexOf(poly);
+				boolean[] movedVert = new boolean[poly.length/2];
+				for(int i=0; i < poly.length -1; i+=2){
+					double distx = poly[i] - x;
+					double disty = poly[i+1] -y;
+					double length = Math.sqrt(distx*distx+disty*disty);
+					movedVert[i/2] = false;
+					if(length<BLAST_RADIUS){
+						distx /= length;
+						disty /= length;
+						poly[i] += distx*EXPLOSION_FORCE*10*polyMat.get(polyI);
+						poly[i+1] += disty*EXPLOSION_FORCE*10*polyMat.get(polyI);
+						movedVert[i/2] = true;
+						System.out.println(i);
+						System.out.println(i/2);
 					}
 				}
-				if(delLines.size() >= poly.length){
-					remList.add(poly);
-					break;
-				}
+				double oRadius = radius;
+				radius = BLAST_RADIUS;
+				boolean addedVert = false;
+				ArrayList<Double> newPoly = new ArrayList<Double>();
+				for(int i=0; i < poly.length -1; i+=2){
+					int i2 = i+2;
+					if(i2 == poly.length)
+						i2 = 0;
 					
-				double[] newPoly = new double[poly.length-delLines.size()];
-				System.out.println("l1: " +poly.length + " l2: " + newPoly.length + " l3: " + delLines.size());
-				int cnt = 0;
-				if(newPoly.length > 0){
-					for(int i = 0; i<poly.length && cnt < newPoly.length; i++){
-						if(!delLines.contains(i)){
-							newPoly[cnt] = poly[i];
-							System.out.println("i: " +cnt);
-							cnt++;
+					newPoly.add(poly[i]);
+					newPoly.add(poly[i+1]);
+					if(!movedVert[i/2] && !movedVert[i2/2]){
+						System.out.println(i);
+						System.out.println(i/2);
+						double distx = poly[i]-poly[i2];
+						double disty = poly[i+1]-poly[i2+1];
+						double length = Math.sqrt(distx*distx+disty*disty);
+						if(length > BLAST_RADIUS){
+							double[] point = detectCircle(new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]});
+							if(point != null){
+								double vecx = point[0] - x;
+								double vecy = point[1] -y;
+								double len = Math.sqrt(vecx*vecx+vecy*vecy);
+								vecx /= len;
+								vecy /= len;
+								point[0] += vecx*EXPLOSION_FORCE*10*polyMat.get(polyI);
+								point[1] += vecy*EXPLOSION_FORCE*10*polyMat.get(polyI);
+								newPoly.add(point[0]);
+								newPoly.add(point[1]);
+								
+								addedVert = true;
+							}
 						}
 					}
-					addList.add(newPoly);
-					remList.add(poly);
+				}
+				radius = oRadius;
+				if(addedVert){
+					double[] newPolyArr = new double[newPoly.size()];
+					for(int i = 0; i<newPolyArr.length; i++){
+						newPolyArr[i] = newPoly.get(i).doubleValue();
+					}
+					lines.set(polyI, newPolyArr);
 				}
 			}
-			System.out.println("2: " + addList.size());
-			System.out.println("3: " + remList.size());
-			for(int i = 0; i < addList.size(); i++){
-				lines.add(addList.get(i));
-			}
-			for(int i = 0; i < remList.size(); i++){
-				lines.remove(remList.get(i));
-			}
-			System.out.println("4: " + lines.size());
-			//NEED TO FIX THIS FOR POLY
-			
-			radius = oRadius;
 			
 		}else{
 			gfxTimer += 0.02;
