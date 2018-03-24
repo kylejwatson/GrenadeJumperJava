@@ -27,6 +27,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
+import javafx.scene.paint.ImagePattern;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 
@@ -35,12 +36,13 @@ public class GrenadeJumperJava extends Application {
 	private GraphicsContext gc;
 	private boolean a,d,s,w;
 	private int wHeld = 0;
-	private double[] newPoint;
+	private ArrayList<Double> newPoly = new ArrayList<Double>();
 	private ArrayList<double[]> lines = new ArrayList<double[]>();
 	private ArrayList<GameObject> list = new ArrayList<GameObject>();
 	private ArrayList<PhysicsObject> physList = new ArrayList<PhysicsObject>();
 	private ArrayList<GameObject> delList = new ArrayList<GameObject>();
 	private TestPlayer player;
+	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.png"),3,8,15,15,false);
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
@@ -64,16 +66,24 @@ public class GrenadeJumperJava extends Application {
 					wHeld++;
 				player.keyInput(a,d,s,w,wHeld);
 			}
-			for(int i = 0; i< lines.size(); i++)
-			{
-				gc.setStroke(Color.BLACK);
-//				double[] det = detectCircle(lines.get(i),player);
-//				if(det[0] != player.x && det[1] != player.y)
-//					gc.setStroke(Color.BLUE);
-				gc.strokeLine(lines.get(i)[0], lines.get(i)[1], lines.get(i)[2], lines.get(i)[3]);
-//				gc.setStroke(Color.RED);
-//				double[] point = closestPoint(player,lines.get(i));
-//				gc.strokeLine(player.x, player.y, point[0], point[1]);
+			for(int i =0; i <newPoly.size() -1; i+=2){
+				gc.strokeOval(newPoly.get(i)-3, newPoly.get(i+1)-3, 6, 6);
+			}
+			
+			for(double[] poly : lines){
+				gc.beginPath();
+				gc.moveTo(poly[0], poly[1]);
+				for(int i=2; i < poly.length -1; i+=2){
+					int i2 = i+1; 
+					if(i2 == poly.length)
+						i2 = 0;
+					gc.lineTo(poly[i], poly[i2]);
+				}
+				gc.lineTo(poly[0], poly[1]);
+				gc.closePath();
+				gc.setFill(dirt);
+				gc.fill();
+				gc.setFill(Color.BLACK);
 			}
 			gc.restore();
 		} 
@@ -87,22 +97,17 @@ public class GrenadeJumperJava extends Application {
 			double my = mouseEvent.getY() +player.y-gc.getCanvas().getHeight()/2;
 			if(drawing){
 				if(mouseEvent.getButton() == MouseButton.PRIMARY){
-					if(newPoint == null){
-						newPoint = new double[4];
-						newPoint[0] = mx;
-						newPoint[1] = my;
-					}
-					else{
-						newPoint[2] = mx;
-						newPoint[3] = my;
-						lines.add(newPoint);
-						newPoint = new double[4];
-						newPoint[0] = mx;
-						newPoint[1] = my;
-					}
+					newPoly.add(mx);
+					newPoly.add(my);
 				}else if(mouseEvent.getButton() == MouseButton.SECONDARY){
+					if(!newPoly.isEmpty()){
+						double[] arr = new double[newPoly.size()];
+						for(int i =0; i<arr.length;i++)
+							arr[i] = newPoly.get(i).doubleValue();
+						lines.add(arr);
+						newPoly.clear();						
+					}
 					drawing = false;
-					newPoint = null;
 				}
 			}else{
 				player.mouseDown(mouseEvent);
@@ -185,10 +190,10 @@ public class GrenadeJumperJava extends Application {
 				System.out.println("Err: FileNotFoundException");
 			}
 			if(pWriter != null){
-				for(double[]  line: lines){
+				for(double[] poly : lines){
 					pWriter.println();
-					for(int i =0; i < 4; i++){
-						pWriter.print(line[i] + ",");
+					for(double pos:poly){
+						pWriter.print(pos + ",");
 					}
 				}
 				pWriter.close();
@@ -221,14 +226,18 @@ public class GrenadeJumperJava extends Application {
 				String myLine = fileScanner.nextLine();
 				Scanner lineScanner = new Scanner(myLine);
 				lineScanner.useDelimiter(",");
-				double[] newLine = new double[4];
-				for(int i = 0; lineScanner.hasNext(); i++){
-					newLine[i] = lineScanner.nextDouble();
+				ArrayList<Double> newLine = new ArrayList<Double>();
+				while(lineScanner.hasNext()){
+					newLine.add(lineScanner.nextDouble());
 				}
 				lineScanner.close();
-				lines.add(newLine);
+				double[] arr = new double[newLine.size()];
+				for(int i =0; i<arr.length;i++)
+					arr[i] = newLine.get(i).doubleValue();
+				lines.add(arr);
 			}
-			lines.remove(0);
+			if(!lines.isEmpty())
+				lines.remove(0);
 			fileScanner.close();
 		}
 	}

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -19,6 +20,7 @@ public class Grenade extends PhysicsObject {
 	}
 	
 	public void update(GraphicsContext gc){
+		super.update(gc);
 		timer+=0.02;
 		if(timer>DETONATE_TIME){
 			explode();
@@ -27,7 +29,6 @@ public class Grenade extends PhysicsObject {
 				gc.fillOval(x-BLAST_RADIUS/2, y-BLAST_RADIUS/2, BLAST_RADIUS, BLAST_RADIUS);
 			}
 		}
-		super.update(gc);
 	}
 	
 	private void explode(){
@@ -47,18 +48,53 @@ public class Grenade extends PhysicsObject {
 					}
 				}
 			}
-			ArrayList<double[]> delLines = new ArrayList<double[]>();
+			ArrayList<Integer> delLines = new ArrayList<Integer>();
 			double oRadius = radius;
 			radius = BLAST_RADIUS/2;
-			for(double[] line : lines){
-				double[] point = detectCircle(line);
-				if(point != null){
-					//delLines.add(line);
+			ArrayList<double[]> addList = new ArrayList<double[]>();
+			ArrayList<double[]> remList = new ArrayList<double[]>();
+			System.out.println("1: " + lines.size());
+			for(double[] poly : lines){
+				for(int i=0; i < poly.length -2; i+=2){
+					int i2 = i+2;
+					double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
+					double[] point = detectCircle(line);
+					if(point != null){
+						delLines.add(i);
+						delLines.add(i+1);
+					}
+				}
+				if(delLines.size() >= poly.length){
+					remList.add(poly);
+					break;
+				}
+					
+				double[] newPoly = new double[poly.length-delLines.size()];
+				System.out.println("l1: " +poly.length + " l2: " + newPoly.length + " l3: " + delLines.size());
+				int cnt = 0;
+				if(newPoly.length > 0){
+					for(int i = 0; i<poly.length && cnt < newPoly.length; i++){
+						if(!delLines.contains(i)){
+							newPoly[cnt] = poly[i];
+							System.out.println("i: " +cnt);
+							cnt++;
+						}
+					}
+					addList.add(newPoly);
+					remList.add(poly);
 				}
 			}
-			for(double[] line : delLines){
-				lines.remove(line);
+			System.out.println("2: " + addList.size());
+			System.out.println("3: " + remList.size());
+			for(int i = 0; i < addList.size(); i++){
+				lines.add(addList.get(i));
 			}
+			for(int i = 0; i < remList.size(); i++){
+				lines.remove(remList.get(i));
+			}
+			System.out.println("4: " + lines.size());
+			//NEED TO FIX THIS FOR POLY
+			
 			radius = oRadius;
 			
 		}else{

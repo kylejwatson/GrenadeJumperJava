@@ -44,24 +44,30 @@ public class PhysicsObject extends GameObject{
 	}
 
 	private void collisionResolution(){
-		for(double[] line : lines){
-			double[] point = detectCircle(line);
-			
-			if(point != null){
-				double xvec = point[0] - x;
-				double yvec = point[1] - y;
-				double veclen = Math.sqrt(xvec*xvec + yvec*yvec);
-				double xfull = xvec * radius/veclen;
-				double yfull = yvec*  radius/veclen;
-				double newvecx = xfull - xvec;
-				double newvecy = yfull - yvec;
-				y -= newvecy;
+		for(double[] poly : lines){
+			for(int i=0; i < poly.length -1; i+=2){
+				int i2 = i+2; 
+				if(i2 == poly.length)
+					i2 = 0;
+				double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
+				double[] point = detectCircle(line);
 				
-				velx -= newvecx;
-				vely -= newvecy;	
-				if(xfull == 0)
-					vely = 0;
-				velx -= velx*FRIC;
+				if(point != null){
+					double xvec = point[0] - x;
+					double yvec = point[1] - y;
+					double veclen = Math.sqrt(xvec*xvec + yvec*yvec);
+					double xfull = xvec * radius/veclen;
+					double yfull = yvec*  radius/veclen;
+					double newvecx = xfull - xvec;
+					double newvecy = yfull - yvec;
+					y -= newvecy;
+					
+					velx -= newvecx;
+					vely -= newvecy;	
+					if(xfull == 0)
+						vely = 0;
+					velx -= velx*FRIC;
+				}
 			}
 		}
 	}

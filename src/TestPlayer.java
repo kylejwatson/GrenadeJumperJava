@@ -33,15 +33,6 @@ public class TestPlayer extends PhysicsObject {
 		px = x+vecx*50;
 		py = y+vecy*50;
 		gc.strokeLine(x, y, px, py);
-		for(double[] line : lines)
-		{
-			gc.setStroke(Color.RED);
-			double[] linePoint = detectLineCollision(new double[]{x,y,px,py},line);
-			if(linePoint != null){
-				gc.strokeOval(linePoint[0]-3, linePoint[1]-3, 6, 6);
-				//System.out.println(linePoint[0]);
-			}
-		}
 		super.update(gc);
 	}
 
@@ -50,13 +41,20 @@ public class TestPlayer extends PhysicsObject {
 		if(a){
 			boolean moveable = true;
 			x-=radius+1;
-			for(int i = 0; i< lines.size(); i++){
-				double[] point = detectCircle(lines.get(i));
-				if(point != null){
-					moveable = false;
-					break;
+			loop1:
+				for(double[] poly : lines){
+					for(int i=0; i < poly.length -1; i+=2){
+						int i2 = i+2; 
+						if(i2 == poly.length)
+							i2 = 0;
+						double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
+						double[] point = detectCircle(line);
+						if(point != null){
+							moveable = false;
+							break loop1;
+						}
+					}
 				}
-			}
 			x+=radius+1;
 			if(moveable){
 				if(velx - SPEED > -MAX_SPEED)
@@ -68,13 +66,20 @@ public class TestPlayer extends PhysicsObject {
 		if(d){
 			boolean moveable = true;
 			x+=radius+1;
-			for(int i = 0; i< lines.size(); i++){
-				double[] point = detectCircle(lines.get(i));
-				if(point != null){
-					moveable = false;
-					break;
+			loop1:
+				for(double[] poly : lines){
+					for(int i=0; i < poly.length -1; i+=2){
+						int i2 = i+2; 
+						if(i2 == poly.length)
+							i2 = 0;
+						double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
+						double[] point = detectCircle(line);
+						if(point != null){
+							moveable = false;
+							break loop1;
+						}
+					}
 				}
-			}
 			x-=radius+1;
 			if(moveable){
 				if(velx + SPEED < MAX_SPEED)
@@ -85,15 +90,22 @@ public class TestPlayer extends PhysicsObject {
 		}
 		if(w){
 			y+=radius+1;
-			for(int i = 0; i< lines.size(); i++){
-				double[] point = detectCircle(lines.get(i));
-				if(point != null){
-					if(point[1] > y){
-						vely -= JUMP;
-						break;
+			loop1:
+				for(double[] poly : lines){
+					for(int i=0; i < poly.length -1; i+=2){
+						int i2 = i+2; 
+						if(i2 == poly.length)
+							i2 = 0;
+						double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
+						double[] point = detectCircle(line);
+						if(point != null){
+							if(point[1] > y){
+								vely -= JUMP;
+								break loop1;
+							}
+						}
 					}
 				}
-			}
 			y-=radius+1;
 		}
 		radius *= 2;
@@ -119,7 +131,7 @@ public class TestPlayer extends PhysicsObject {
 			list.add(g);
 		}
 		//else
-			//g.addVelocity(vecx*5, vecy*5);
+		//g.addVelocity(vecx*5, vecy*5);
 	}
 
 	public void input(Event e){
