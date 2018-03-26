@@ -51,73 +51,73 @@ public class Grenade extends PhysicsObject {
 			}
 			for(double[] poly : lines){
 				int polyI = lines.indexOf(poly);
-				boolean[] movedVert = new boolean[poly.length/2];
-				for(int i=0; i < poly.length -1; i+=2){
-					double distx = poly[i] - x;
-					double disty = poly[i+1] -y;
-					double length = Math.sqrt(distx*distx+disty*disty);
-					movedVert[i/2] = false;
-					if(length<BLAST_RADIUS){
-						distx /= length;
-						disty /= length;
-						poly[i] += distx*EXPLOSION_FORCE*10*polyMat.get(polyI);
-						poly[i+1] += disty*EXPLOSION_FORCE*10*polyMat.get(polyI);
-						movedVert[i/2] = true;
-						System.out.println(i);
-						System.out.println(i/2);
-					}
-				}
-				double oRadius = radius;
-				radius = BLAST_RADIUS;
-				boolean addedVert = false;
-				ArrayList<Double> newPoly = new ArrayList<Double>();
-				for(int i=0; i < poly.length -1; i+=2){
-					int i2 = i+2;
-					if(i2 == poly.length)
-						i2 = 0;
-					
-					newPoly.add(poly[i]);
-					newPoly.add(poly[i+1]);
-					if(!movedVert[i/2] && !movedVert[i2/2]){
-						System.out.println(i);
-						System.out.println(i/2);
-						double distx = poly[i]-poly[i2];
-						double disty = poly[i+1]-poly[i2+1];
+				double material = polyMat.get(polyI);
+				if(material > 0){
+					boolean[] movedVert = new boolean[poly.length/2];
+					for(int i=0; i < poly.length -1; i+=2){
+						double distx = poly[i] - x;
+						double disty = poly[i+1] -y;
 						double length = Math.sqrt(distx*distx+disty*disty);
-						if(length > BLAST_RADIUS){
-							double[] point = detectCircle(new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]});
-							if(point != null){
-								double vecx = point[0] - x;
-								double vecy = point[1] -y;
-								double len = Math.sqrt(vecx*vecx+vecy*vecy);
-								vecx /= len;
-								vecy /= len;
-								point[0] += vecx*EXPLOSION_FORCE*10*polyMat.get(polyI);
-								point[1] += vecy*EXPLOSION_FORCE*10*polyMat.get(polyI);
-								newPoly.add(point[0]);
-								newPoly.add(point[1]);
-								
-								addedVert = true;
+						movedVert[i/2] = false;
+						if(length<BLAST_RADIUS){
+							distx /= length;
+							disty /= length;
+							poly[i] += distx*EXPLOSION_FORCE*10/material;
+							poly[i+1] += disty*EXPLOSION_FORCE*10/material;
+							movedVert[i/2] = true;
+							System.out.println(i);
+							System.out.println(i/2);
+						}
+					}
+					double oRadius = radius;
+					radius = BLAST_RADIUS;
+					boolean addedVert = false;
+					ArrayList<Double> newPoly = new ArrayList<Double>();
+					for(int i=0; i < poly.length -1; i+=2){
+						int i2 = i+2;
+						if(i2 == poly.length)
+							i2 = 0;
+						
+						newPoly.add(poly[i]);
+						newPoly.add(poly[i+1]);
+						if(!movedVert[i/2] && !movedVert[i2/2]){
+							System.out.println(i);
+							System.out.println(i/2);
+							double distx = poly[i]-poly[i2];
+							double disty = poly[i+1]-poly[i2+1];
+							double length = Math.sqrt(distx*distx+disty*disty);
+							if(length > BLAST_RADIUS){
+								double[] point = detectCircle(new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]});
+								if(point != null){
+									double vecx = point[0] - x;
+									double vecy = point[1] -y;
+									double len = Math.sqrt(vecx*vecx+vecy*vecy);
+									vecx /= len;
+									vecy /= len;
+									point[0] += vecx*EXPLOSION_FORCE*10/material;
+									point[1] += vecy*EXPLOSION_FORCE*10/material;
+									newPoly.add(point[0]);
+									newPoly.add(point[1]);
+									
+									addedVert = true;
+								}
 							}
 						}
 					}
-				}
-				radius = oRadius;
-				if(addedVert){
-					double[] newPolyArr = new double[newPoly.size()];
-					for(int i = 0; i<newPolyArr.length; i++){
-						newPolyArr[i] = newPoly.get(i).doubleValue();
+					radius = oRadius;
+					if(addedVert){
+						double[] newPolyArr = new double[newPoly.size()];
+						for(int i = 0; i<newPolyArr.length; i++){
+							newPolyArr[i] = newPoly.get(i).doubleValue();
+						}
+						lines.set(polyI, newPolyArr);
 					}
-					lines.set(polyI, newPolyArr);
 				}
-			}
-			
+			}	
 		}else{
 			gfxTimer += 0.02;
 			if(gfxTimer>GRAPHICS_DELAY)
 				delList.add(this);
-			
 		}
 	}
-
 }
