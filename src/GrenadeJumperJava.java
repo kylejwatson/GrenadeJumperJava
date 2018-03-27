@@ -1,10 +1,18 @@
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 import java.util.Scanner;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -39,6 +47,7 @@ public class GrenadeJumperJava extends Application {
 	private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
 	private Double curMaterial = 3.5D;
 	private int mapI = 0;
+	private Clip clip;
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
@@ -63,6 +72,10 @@ public class GrenadeJumperJava extends Application {
 				player.keyInput(a,d,s,w,wHeld);
 			}
 			if(player.reachGoal()){
+				if(!clip.isRunning()){
+					clip.setFramePosition(0);
+					clip.start();
+				}
 				mapI++;
 				readMapData(maps[mapI]);
 			}
@@ -322,6 +335,13 @@ public class GrenadeJumperJava extends Application {
 		scene.setOnKeyPressed(keyDownHandler);
 		scene.setOnKeyReleased(keyUpHandler);
 		timer.start();
-
+		try {
+			clip = AudioSystem.getClip();
+			URL url = Grenade.class.getResource("/res/goal.wav");
+	        AudioInputStream inputStream = AudioSystem.getAudioInputStream(url);
+	        clip.open(inputStream);
+		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
+			e.printStackTrace();
+		}
 	}
 }

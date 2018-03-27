@@ -1,4 +1,12 @@
+import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
+
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineUnavailableException;
+import javax.sound.sampled.UnsupportedAudioFileException;
 
 import javafx.event.Event;
 import javafx.scene.canvas.GraphicsContext;
@@ -14,12 +22,21 @@ public class Player extends PhysicsObject {
 	private double mx = 0;
 	private double my = 0 ;
 	private ArrayList<Double> polyMat;
+	private Clip clip;
 	private static final float SPEED = 3;
 	private static final float JUMP = 5;
 	private static final double MAX_SPEED = 4;
 	public Player(double x, double y, ArrayList<GameObject>list,ArrayList<GameObject>delList, ArrayList<double[]> lines, ArrayList<Double> polyMat) {
 		super(new Image("/res/char.png"),x,y,list,delList,lines);
 		this.polyMat = polyMat;
+		try {
+			clip = AudioSystem.getClip();
+			URL url = Grenade.class.getResource("/res/walk.wav");
+	        AudioInputStream inputStream = AudioSystem.getAudioInputStream(url);
+	        clip.open(inputStream);
+		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void update(GraphicsContext gc){
@@ -39,6 +56,7 @@ public class Player extends PhysicsObject {
 
 	public void keyInput(boolean a,boolean d,boolean s,boolean w, int wHeld){
 		radius /= 2;
+		boolean totalMovable = false;
 		if(a){
 			boolean moveable = true;
 			x-=radius+5;
@@ -59,6 +77,7 @@ public class Player extends PhysicsObject {
 				}
 			x+=radius+5;
 			if(moveable){
+				totalMovable = true;
 				if(velx - SPEED > -MAX_SPEED)
 					velx -= SPEED;
 				else
@@ -89,31 +108,40 @@ public class Player extends PhysicsObject {
 					velx += SPEED;
 				else
 					velx = MAX_SPEED;
+				totalMovable = true;
 			}
 		}
-		if(w){
-			y+=radius+1;
-			radius*=1.2;
-			loop1:
-				for(double[] poly : lines){
-					for(int i=0; i < poly.length -1; i+=2){
-						int i2 = i+2; 
-						if(i2 == poly.length)
-							i2 = 0;
-						double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
-						double[] point = detectCircle(line);
-						if(point != null){
-							if(point[1] > y){
-								vely -= JUMP;
-								break loop1;
-							}
+		boolean canJump = false;
+		y+=radius+1;
+		radius*=1.2;
+		loop1:
+			for(double[] poly : lines){
+				for(int i=0; i < poly.length -1; i+=2){
+					int i2 = i+2; 
+					if(i2 == poly.length)
+						i2 = 0;
+					double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
+					double[] point = detectCircle(line);
+					if(point != null){
+						if(point[1] > y){
+							canJump = true;
+							break loop1;
 						}
 					}
 				}
-			radius/=1.2;
-			y-=radius+1;
-		}
+			}
+		radius/=1.2;
+		y-=radius+1;
+		if(w && canJump)			
+			vely -= JUMP;
+		
 		radius *= 2;
+		if((a || d) && canJump && totalMovable){
+			if(!clip.isRunning()){
+				clip.setFramePosition(0);
+				clip.start();
+			}
+		}
 	}
 
 
