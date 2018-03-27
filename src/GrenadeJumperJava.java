@@ -31,9 +31,11 @@ public class GrenadeJumperJava extends Application {
 	private ArrayList<GameObject> list = new ArrayList<GameObject>();
 	private ArrayList<Double> polyMat = new ArrayList<Double>();
 	private ArrayList<GameObject> delList = new ArrayList<GameObject>();
+	private String[] maps = new String[]{"myMap1.txt","myMap2.txt"};
 	private Player player;
 	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.png"),3,8,15,15,false);
 	private Double curMaterial = 3D;
+	private int mapI = 0;
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
@@ -56,6 +58,10 @@ public class GrenadeJumperJava extends Application {
 				if(w)
 					wHeld++;
 				player.keyInput(a,d,s,w,wHeld);
+			}
+			if(player.reachGoal()){
+				readMapData(maps[mapI]);
+				mapI++;
 			}
 			for(int i =0; i <newPoly.size() -1; i+=2){
 				gc.strokeOval(newPoly.get(i)-3, newPoly.get(i+1)-3, 6, 6);
@@ -148,9 +154,9 @@ public class GrenadeJumperJava extends Application {
 			case SPACE:
 				Random rand = new Random();
 
-				double  x = rand.nextDouble()*1000;
-				double  y = rand.nextDouble()*630;
-				list.add(new Grenade(x, y, list, delList, lines, polyMat));
+				double  x = rand.nextDouble()*1000-500;
+				double  y = rand.nextDouble()*630-315;
+				player.throwNade(x, y);
 				break;
 			case DIGIT0:
 				curMaterial = 0D;
@@ -229,12 +235,15 @@ public class GrenadeJumperJava extends Application {
 		}
 	}
 	public void readMapData(String path){
-		//Create a frame for the file dialog box to get a path for the file
-		
+		lines.clear();
+		list.clear();
+		player = new Player(100,100,list,delList,lines,polyMat);
+		list.add(player);
+
 		File myFile = new File(path);
 		System.out.println("Diag: File exists?: " + myFile.exists());
 		Scanner fileScanner;
-		
+
 		//Try and load the file into a scanner
 		try {
 			fileScanner = new Scanner(myFile);
@@ -243,35 +252,50 @@ public class GrenadeJumperJava extends Application {
 			System.out.println("Err: No file found");
 			fileScanner = null;
 		}
-		
+
 		if(fileScanner != null){
+			if(fileScanner.hasNextLine()){
+				String myLine = fileScanner.nextLine();
+				Scanner lineScanner = new Scanner(myLine);
+				lineScanner.useDelimiter(",");
+				player.x = lineScanner.nextDouble();
+				player.y = lineScanner.nextDouble();
+				lineScanner.close();
+			}
+			boolean poly = false;
 			while(fileScanner.hasNextLine()){
 				//If the scanner loaded correctly read all the lines
 				String myLine = fileScanner.nextLine();
 				Scanner lineScanner = new Scanner(myLine);
-					lineScanner.useDelimiter(",");
+				lineScanner.useDelimiter(",");
+				if(myLine.startsWith("/"))
+					poly = true;
+				else if(!poly){
+					Goal g = new Goal(0,0);
+					g.x = lineScanner.nextDouble();
+					g.y = lineScanner.nextDouble();
+					list.add(g);
+				}else{
 					if(lineScanner.hasNextDouble())
 						polyMat.add(lineScanner.nextDouble());
 					ArrayList<Double> newLine = new ArrayList<Double>();
 					while(lineScanner.hasNextDouble()){
 						newLine.add(lineScanner.nextDouble());
 					}
-					lineScanner.close();
 					double[] arr = new double[newLine.size()];
 					for(int i =0; i<arr.length;i++)
 						arr[i] = newLine.get(i).doubleValue();
 					lines.add(arr);
 				}
-			
-			if(!lines.isEmpty())
-				lines.remove(0);
+				lineScanner.close();
+			}
 			fileScanner.close();
 		}
 	}
 
 	@Override
 	public void stop(){
-		writeMapData("myMap.txt");
+		//writeMapData("myMap.txt");
 	}
 	@Override
 	public void start(Stage stage) throws Exception {
@@ -285,21 +309,11 @@ public class GrenadeJumperJava extends Application {
 		gc.setFill(Color.WHITE);
 		gc.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
 		root.getChildren().add(canvas);
-		readMapData("myMap.txt");
-		/*lines.add(new double[]{10,10,100,100});
-		lines.add(new double[]{200,200,300,200});
-		lines.add(new double[]{200,200,150,300});
-		lines.add(new double[]{0,400,400,500});
-		lines.add(new double[]{400,500,800,500});
-		lines.add(new double[]{800,400,800,200});
-		lines.add(new double[]{820,200,820,100});*/
+		readMapData(maps[mapI]);
 		canvas.setOnMouseClicked(clickHandler);
 		canvas.setOnMouseMoved(moveHandler);
 		scene.setOnKeyPressed(keyDownHandler);
 		scene.setOnKeyReleased(keyUpHandler);
-		
-		player = new Player(100,100,list,delList,lines,polyMat);
-		list.add(player);
 		timer.start();
 
 	}

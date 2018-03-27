@@ -122,6 +122,19 @@ public class Player extends PhysicsObject {
 		my = me.getY();		
 	}
 
+	public void throwNade(double x, double y){
+		double vecx = x;
+		double vecy = y;
+		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
+		vecx = vecx/dist;
+		vecy = vecy/dist;
+		vecx = -vecx;
+		vecy = -vecy;
+		Grenade g = new Grenade(this.x,this.y,list,delList,lines,polyMat);
+		g.addVelocity(vecx*10, vecy*10);
+		list.add(g);
+	}
+	
 	public void mouseDown(MouseEvent me){
 		double vecx = 500 - me.getX();
 		double vecy = 315 - me.getY();
@@ -135,11 +148,19 @@ public class Player extends PhysicsObject {
 			g.addVelocity(vecx*10, vecy*10);
 			list.add(g);
 		}
-		//else
-		//g.addVelocity(vecx*5, vecy*5);
 	}
 
 	public void input(Event e){
+	}
+
+	public boolean reachGoal() {
+		for(GameObject g:list){
+			if(g instanceof Goal){
+				if(getDistance(g) < radius+g.radius)
+					return true;
+			}
+		}
+		return false;
 	}
 
 }
