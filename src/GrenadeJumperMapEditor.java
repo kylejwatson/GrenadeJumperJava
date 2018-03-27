@@ -30,11 +30,14 @@ public class GrenadeJumperMapEditor extends Application {
 	private ArrayList<double[]> lines = new ArrayList<double[]>();
 	private ArrayList<GameObject> list = new ArrayList<GameObject>();
 	private ArrayList<Double> polyMat = new ArrayList<Double>();
-	private ArrayList<GameObject> delList = new ArrayList<GameObject>();
+	//private ArrayList<GameObject> delList = new ArrayList<GameObject>();
 	private double x = 0;
 	private double y = 0;
 	private Respawn resp = new Respawn(0,0);
-	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.png"),3,8,15,15,false);
+	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.jpg"),0,0,100,100,false);
+	private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
+	private ImagePattern wood = new ImagePattern(new Image("/res/wood.jpg"),0,0,100,100,false);
+	private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
 	private Double curMaterial = 3D;
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
@@ -49,11 +52,6 @@ public class GrenadeJumperMapEditor extends Application {
 			{
 				obj.update(gc);
 			}
-			for(GameObject obj : delList)
-			{
-				list.remove(obj);
-			}
-			delList.clear();
 
 			for(int i =0; i <newPoly.size() -1; i+=2){
 				gc.strokeOval(newPoly.get(i)-3, newPoly.get(i+1)-3, 6, 6);
@@ -72,13 +70,13 @@ public class GrenadeJumperMapEditor extends Application {
 				}
 				gc.closePath();
 				if(polyMat.get(k)>3)
-					gc.setFill(Color.GRAY);
+					gc.setFill(brick);
 				else if(polyMat.get(k)>2)
-					gc.setFill(Color.BROWN);
+					gc.setFill(wood);
 				else if(polyMat.get(k)>1)
 					gc.setFill(dirt);
 				else
-					gc.setFill(Color.BLACK);
+					gc.setFill(metal);
 				gc.fill();
 				gc.setFill(Color.BLACK);
 			}
@@ -103,14 +101,33 @@ public class GrenadeJumperMapEditor extends Application {
 					newPoly.add(my);
 				}
 			}else if(mouseEvent.getButton() == MouseButton.SECONDARY){
-				if(!newPoly.isEmpty()){
-					double[] arr = new double[newPoly.size()];
-					for(int i =0; i<arr.length;i++)
-						arr[i] = newPoly.get(i).doubleValue();
-					lines.add(arr);
-					polyMat.add(curMaterial);
-					newPoly.clear();						
+				ArrayList<Integer> del = new ArrayList<Integer>();
+				for(int k=0; k<lines.size(); k++){
+					double[] poly = lines.get(k);
+					for(int i=0; i < poly.length -1; i+=2){
+						double vecx = poly[i] - mx;
+						double vecy = poly[i+1] - my;
+						double dist = Math.sqrt(vecx*vecx + vecy*vecy);
+						if(dist < 10){
+							del.add(k);
+						}
+					}
 				}
+				for(int i : del){
+					lines.remove(i);
+					polyMat.remove(i);
+				}
+				ArrayList<GameObject> delList = new ArrayList<GameObject>();
+				for(GameObject g:list){
+					double vecx = g.x - mx;
+					double vecy = g.y - my;
+					double dist = Math.sqrt(vecx*vecx + vecy*vecy);
+					if(dist < g.radius){
+						delList.add(g);
+					}
+				}
+				for(GameObject g: delList)
+					list.remove(g);
 			}
 		}
 	};
@@ -127,19 +144,19 @@ public class GrenadeJumperMapEditor extends Application {
 		public void handle(KeyEvent arg0) {
 			switch(arg0.getCode()){
 			case A:
-				x--;
+				x-=20;
 				break;
 			case D:
-				x++;
+				x+=20;
 				break;
 			case W:
-				y--;
+				y-=20;
 				break;
 			case S:
 				if(ctrl)
 					writeMapData();
 				else
-					y++;
+					y+=20;
 				break;
 			case O:
 				if(ctrl)
@@ -150,7 +167,6 @@ public class GrenadeJumperMapEditor extends Application {
 
 				double  x = rand.nextDouble()*1000;
 				double  y = rand.nextDouble()*630;
-				list.add(new Grenade(x, y, list, delList, lines, polyMat));
 				break;
 			case DIGIT0:
 				curMaterial = 0D;
@@ -173,6 +189,15 @@ public class GrenadeJumperMapEditor extends Application {
 				//case 1 2 and 3 for material
 			case CONTROL:
 				ctrl = true;
+			case ENTER:
+				if(newPoly.size() > 2){
+					double[] arr = new double[newPoly.size()];
+					for(int i =0; i<arr.length;i++)
+						arr[i] = newPoly.get(i).doubleValue();
+					lines.add(arr);
+					polyMat.add(curMaterial);
+					newPoly.clear();						
+				}
 			default:
 				System.out.println("not player key");
 			}
@@ -247,6 +272,7 @@ public class GrenadeJumperMapEditor extends Application {
 	}
 	
 	public void readMapData(String path){
+		polyMat.clear();
 		lines.clear();
 		list.clear();
 

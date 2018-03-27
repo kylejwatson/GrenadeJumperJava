@@ -31,10 +31,13 @@ public class GrenadeJumperJava extends Application {
 	private ArrayList<GameObject> list = new ArrayList<GameObject>();
 	private ArrayList<Double> polyMat = new ArrayList<Double>();
 	private ArrayList<GameObject> delList = new ArrayList<GameObject>();
-	private String[] maps = new String[]{"myMap1.txt","myMap2.txt"};
+	private String[] maps = new String[]{"introToMat","metalLevel1","myMap1.txt","myMap2.txt"};
 	private Player player;
-	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.png"),3,8,15,15,false);
-	private Double curMaterial = 3D;
+	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.jpg"),0,0,100,100,false);
+	private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
+	private ImagePattern wood = new ImagePattern(new Image("/res/wood.jpg"),0,0,100,100,false);
+	private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
+	private Double curMaterial = 3.5D;
 	private int mapI = 0;
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
@@ -60,8 +63,8 @@ public class GrenadeJumperJava extends Application {
 				player.keyInput(a,d,s,w,wHeld);
 			}
 			if(player.reachGoal()){
-				readMapData(maps[mapI]);
 				mapI++;
+				readMapData(maps[mapI]);
 			}
 			for(int i =0; i <newPoly.size() -1; i+=2){
 				gc.strokeOval(newPoly.get(i)-3, newPoly.get(i+1)-3, 6, 6);
@@ -80,13 +83,13 @@ public class GrenadeJumperJava extends Application {
 				}
 				gc.closePath();
 				if(polyMat.get(k)>3)
-					gc.setFill(Color.GRAY);
+					gc.setFill(brick);
 				else if(polyMat.get(k)>2)
-					gc.setFill(Color.BROWN);
+					gc.setFill(wood);
 				else if(polyMat.get(k)>1)
 					gc.setFill(dirt);
 				else
-					gc.setFill(Color.BLACK);
+					gc.setFill(metal);
 				gc.fill();
 				gc.setFill(Color.BLACK);
 			}
@@ -172,6 +175,8 @@ public class GrenadeJumperJava extends Application {
 				break;
 			case G:
 				curMaterial = -1D;
+			case R:
+				readMapData(maps[mapI]);
 				break;
 			//case 1 2 and 3 for material
 			default:
@@ -234,9 +239,11 @@ public class GrenadeJumperJava extends Application {
 			System.out.println("Alert: Please store some customers before attempting to write them");
 		}
 	}
+	
 	public void readMapData(String path){
 		lines.clear();
 		list.clear();
+		polyMat.clear();
 		player = new Player(100,100,list,delList,lines,polyMat);
 		list.add(player);
 

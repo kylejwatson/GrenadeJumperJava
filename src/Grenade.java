@@ -16,11 +16,11 @@ public class Grenade extends PhysicsObject {
 	public Grenade(double x, double y, ArrayList<GameObject> list, ArrayList<GameObject> delList, ArrayList<double[]> lines, ArrayList<Double> polyMat) {
 		super(new Image("/res/gren.png"), x, y, list,delList,lines);
 		this.polyMat = polyMat;
-		radius = 10;
 		// TODO Auto-generated constructor stub
 	}
 	
 	public void update(GraphicsContext gc){
+		
 		super.update(gc);
 		timer+=0.02;
 		if(timer>DETONATE_TIME){
@@ -64,7 +64,7 @@ public class Grenade extends PhysicsObject {
 							disty /= length;
 							poly[i] += distx*EXPLOSION_FORCE*10/material;
 							poly[i+1] += disty*EXPLOSION_FORCE*10/material;
-							movedVert[i/2] = true;
+							//movedVert[i/2] = true;
 							System.out.println(i);
 							System.out.println(i/2);
 						}

@@ -31,12 +31,12 @@ public class PhysicsObject extends GameObject{
 			velx *= 10/fullVel;
 			vely *= 10/fullVel;
 		}
-		x += velx;
-		y += vely;
-		gc.setStroke(Color.BLUE);
-		gc.strokeLine(x, y, x+velx, y+vely);
+		//gc.setStroke(Color.BLUE);
+		//gc.strokeLine(x, y, x+velx, y+vely);
 
 		collisionResolution();
+		x += velx;
+		y += vely;
 		
 		
 		super.update(gc);
