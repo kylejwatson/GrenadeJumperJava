@@ -5,7 +5,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.Random;
 import java.util.Scanner;
 
 import javafx.animation.AnimationTimer;
@@ -38,15 +37,15 @@ public class GrenadeJumperMapEditor extends Application {
 	private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
 	private ImagePattern wood = new ImagePattern(new Image("/res/wood.jpg"),0,0,100,100,false);
 	private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
+	private GameObject bg = new GameObject(new Image("/res/backtometal.png"), 0,0);
 	private Double curMaterial = 3D;
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
-			gc.setFill(Color.WHITE);
-			gc.fillRect(0,0,gc.getCanvas().getWidth(),gc.getCanvas().getHeight());
-			gc.setFill(Color.BLACK);
 			gc.save();
 			gc.translate(-x+gc.getCanvas().getWidth()/2, -y+gc.getCanvas().getHeight()/2);
+			bg.update(gc);
+			gc.setFill(Color.BLACK);
 			resp.update(gc);
 			for(GameObject obj : list)
 			{
@@ -96,6 +95,9 @@ public class GrenadeJumperMapEditor extends Application {
 				else if(curMaterial == -2){
 					resp.x = mx;
 					resp.y = my;
+				}else if(curMaterial == -3){
+					bg.x = mx;
+					bg.y = my;
 				}else if(newPoly.isEmpty() || newPoly.get(newPoly.size()-1) != my && newPoly.get(newPoly.size()-2) != mx){
 					newPoly.add(mx);
 					newPoly.add(my);
@@ -163,10 +165,6 @@ public class GrenadeJumperMapEditor extends Application {
 					readMapData();
 				break;
 			case SPACE:
-				Random rand = new Random();
-
-				double  x = rand.nextDouble()*1000;
-				double  y = rand.nextDouble()*630;
 				break;
 			case DIGIT0:
 				curMaterial = 0D;
@@ -185,6 +183,9 @@ public class GrenadeJumperMapEditor extends Application {
 				break;
 			case P:
 				curMaterial = -2D;
+				break;
+			case B:
+				curMaterial = -3D;
 				break;
 				//case 1 2 and 3 for material
 			case CONTROL:
@@ -241,7 +242,7 @@ public class GrenadeJumperMapEditor extends Application {
 				System.out.println("Err: FileNotFoundException");
 			}
 			if(pWriter != null){
-				pWriter.println(resp.x + "," + resp.y);
+				pWriter.println(resp.x + "," + resp.y +","+bg.x+","+bg.y);
 				for(GameObject g : list)
 					pWriter.println(g.x + "," + g.y);
 				pWriter.println("/");
@@ -296,6 +297,10 @@ public class GrenadeJumperMapEditor extends Application {
 				lineScanner.useDelimiter(",");
 				resp.x = lineScanner.nextDouble();
 				resp.y = lineScanner.nextDouble();
+				if(lineScanner.hasNextDouble()){
+					bg.x = lineScanner.nextDouble();
+					bg.y = lineScanner.nextDouble();
+				}
 				lineScanner.close();
 			}
 			boolean poly = false;

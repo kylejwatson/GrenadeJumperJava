@@ -1,4 +1,7 @@
+
 import java.util.ArrayList;
+
+import javax.sound.sampled.Clip;
 
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
@@ -13,11 +16,13 @@ public class PhysicsObject extends GameObject{
 	protected ArrayList<GameObject> list;
 	protected ArrayList<GameObject> delList;
 	protected ArrayList<double[]> lines = new ArrayList<double[]>();
+	protected Clip clip;
 	public PhysicsObject(Image img, double x, double y,ArrayList<GameObject> list,ArrayList<GameObject> delList, ArrayList<double[]> lines) {
 		super(img, x, y);
 		this.list = list;
 		this.delList = delList;
 		this.lines = lines;
+		
 		// TODO Auto-generated constructor stub
 	}
 
@@ -44,6 +49,7 @@ public class PhysicsObject extends GameObject{
 	}
 
 	private void collisionResolution(){
+		boolean hit = false;
 		for(double[] poly : lines){
 			for(int i=0; i < poly.length -1; i+=2){
 				int i2 = i+2; 
@@ -53,6 +59,7 @@ public class PhysicsObject extends GameObject{
 				double[] point = detectCircle(line);
 				
 				if(point != null){
+					hit = true;
 					double xvec = point[0] - x;
 					double yvec = point[1] - y;
 					double veclen = Math.sqrt(xvec*xvec + yvec*yvec);
@@ -68,6 +75,14 @@ public class PhysicsObject extends GameObject{
 						vely = 0;
 					velx -= velx*FRIC;
 				}
+			}
+		}
+		if(clip != null){
+			if( !clip.isRunning()){
+				if(hit)
+					clip.start();
+				else
+					clip.setFramePosition(0);
 			}
 		}
 	}

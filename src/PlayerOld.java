@@ -1,19 +1,14 @@
 import java.util.ArrayList;
 
-import javafx.event.Event;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 
 public class PlayerOld extends PhysicsObject {
-	private double px = 0;
+	/*private double px = 0;
 	private double py = 0 ;
 	private double mx = 0;
 	private double my = 0 ;
 	private double speed = 3;
-	private double jump = 5;
+	private double jump = 5;*/
 	public PlayerOld(double x, double y,ArrayList<GameObject> list,ArrayList<GameObject> delList,ArrayList<double[]> lines) {
 		super(new Image("/res/char.png"),x,y,list,delList,lines);
 		// TODO Auto-generated constructor stub

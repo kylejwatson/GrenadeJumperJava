@@ -1,7 +1,6 @@
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -21,13 +20,21 @@ public class Grenade extends PhysicsObject {
 	private float timer = 0f;
 	private float gfxTimer = 0f;
 	private ArrayList<Double> polyMat;
-	private Clip clip;
+	private Clip expl;
 	public Grenade(double x, double y, ArrayList<GameObject> list, ArrayList<GameObject> delList, ArrayList<double[]> lines, ArrayList<Double> polyMat) {
 		super(new Image("/res/gren.png"), x, y, list,delList,lines);
 		this.polyMat = polyMat;
 		try {
-			clip = AudioSystem.getClip();
+			expl = AudioSystem.getClip();
 			URL url = Grenade.class.getResource("/res/expl.wav");
+	        AudioInputStream inputStream = AudioSystem.getAudioInputStream(url);
+	        expl.open(inputStream);
+		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
+			e.printStackTrace();
+		}
+		try {
+			clip = AudioSystem.getClip();
+			URL url = Grenade.class.getResource("/res/grenhit.wav");
 	        AudioInputStream inputStream = AudioSystem.getAudioInputStream(url);
 	        clip.open(inputStream);
 		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
@@ -50,9 +57,9 @@ public class Grenade extends PhysicsObject {
 	
 	private void explode(){
 		if(gfxTimer == 0f){
-			if(!clip.isRunning()){
-				clip.setFramePosition(0);
-				clip.start();
+			if(!expl.isRunning()){
+				expl.setFramePosition(0);
+				expl.start();
 			}
 			gfxTimer += 0.02;
 			for(GameObject obj:list){

@@ -1,8 +1,8 @@
 
-import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
@@ -11,6 +11,8 @@ import java.util.Scanner;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
+import javax.sound.sampled.LineEvent;
+import javax.sound.sampled.LineListener;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
@@ -22,7 +24,6 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -30,22 +31,20 @@ import javafx.scene.paint.ImagePattern;
 import javafx.stage.Stage;
 
 public class GrenadeJumperJava extends Application {
-	private boolean drawing = false; 
 	private GraphicsContext gc;
 	private boolean a,d,s,w;
 	private int wHeld = 0;
-	private ArrayList<Double> newPoly = new ArrayList<Double>();
 	private ArrayList<double[]> lines = new ArrayList<double[]>();
 	private ArrayList<GameObject> list = new ArrayList<GameObject>();
 	private ArrayList<Double> polyMat = new ArrayList<Double>();
 	private ArrayList<GameObject> delList = new ArrayList<GameObject>();
-	private String[] maps = new String[]{"introToMat","metalLevel1","myMap1.txt","myMap2.txt"};
+	private String[] maps = new String[]{"res/metalLevel1","res/introToMat","res/myMap1.txt","res/myMap2.txt"};
 	private Player player;
-	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.jpg"),0,0,100,100,false);
+	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.jpg"),0,0,200,200,false);
 	private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
 	private ImagePattern wood = new ImagePattern(new Image("/res/wood.jpg"),0,0,100,100,false);
 	private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
-	private Double curMaterial = 3.5D;
+	private GameObject[] bgs = new GameObject[maps.length];
 	private int mapI = 0;
 	private Clip clip;
 	private Clip intro;
@@ -55,15 +54,16 @@ public class GrenadeJumperJava extends Application {
 		public void handle(long now) {
 
 			if(!intro.isRunning() && !loop.isRunning()){
-		        loop.loop(Clip.LOOP_CONTINUOUSLY);
-		        System.out.println("llop");
+		        
 			}
 			gc.setFill(Color.WHITE);
 			gc.fillRect(0,0,gc.getCanvas().getWidth(),gc.getCanvas().getHeight());
 			gc.setFill(Color.BLACK);
 			gc.save();
 			gc.translate(-player.x+gc.getCanvas().getWidth()/2, -player.y+gc.getCanvas().getHeight()/2);
-			if(!drawing){
+			if(bgs[mapI] != null){
+				bgs[mapI].update(gc);
+			}
 				for(GameObject obj : list)
 				{
 					obj.update(gc);
@@ -77,17 +77,16 @@ public class GrenadeJumperJava extends Application {
 				if(w)
 					wHeld++;
 				player.keyInput(a,d,s,w,wHeld);
-			}
+			
 			if(player.reachGoal()){
 				if(!clip.isRunning()){
 					clip.setFramePosition(0);
 					clip.start();
 				}
 				mapI++;
+				if(mapI == maps.length)
+					mapI = 0;
 				readMapData(maps[mapI]);
-			}
-			for(int i =0; i <newPoly.size() -1; i+=2){
-				gc.strokeOval(newPoly.get(i)-3, newPoly.get(i+1)-3, 6, 6);
 			}
 			int polyCount = 0;
 			for(int k=0; k<lines.size(); k++){
@@ -114,40 +113,14 @@ public class GrenadeJumperJava extends Application {
 				gc.setFill(Color.BLACK);
 			}
 			gc.restore();
-			gc.strokeText("Edge Count: " + polyCount+ " Current: " + curMaterial, 30, 30);
+			gc.strokeText("Edge Count: " + polyCount, 30, 30);
 		} 
 	};
 	
 	private EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>(){
 		@Override
 		public void handle(MouseEvent mouseEvent){
-			double mx = mouseEvent.getX() +player.x-gc.getCanvas().getWidth()/2;
-			double my = mouseEvent.getY() +player.y-gc.getCanvas().getHeight()/2;
-			if(drawing){
-				if(mouseEvent.getButton() == MouseButton.PRIMARY){
-					if(curMaterial == -1)
-						list.add(new Goal(mx,my));
-					else if(newPoly.isEmpty() || newPoly.get(newPoly.size()-1) != my && newPoly.get(newPoly.size()-2) != mx){
-						newPoly.add(mx);
-						newPoly.add(my);
-					}
-				}else if(mouseEvent.getButton() == MouseButton.SECONDARY){
-					if(!newPoly.isEmpty()){
-						double[] arr = new double[newPoly.size()];
-						for(int i =0; i<arr.length;i++)
-							arr[i] = newPoly.get(i).doubleValue();
-						lines.add(arr);
-						polyMat.add(curMaterial);
-						newPoly.clear();						
-					}
-					drawing = false;
-				}
-			}else{
-				player.mouseDown(mouseEvent);
-				if(mouseEvent.getButton() == MouseButton.SECONDARY){
-					drawing = true;
-				}
-			}
+			player.mouseDown(mouseEvent);
 		}
 	};
 	private EventHandler<MouseEvent> moveHandler = new EventHandler<MouseEvent>(){
@@ -175,32 +148,21 @@ public class GrenadeJumperJava extends Application {
 				s = true;
 				break;
 			case SPACE:
+				w = true;
+				break;
+			case BACK_QUOTE:
 				Random rand = new Random();
 
 				double  x = rand.nextDouble()*1000-500;
 				double  y = rand.nextDouble()*630-315;
 				player.throwNade(x, y);
 				break;
-			case DIGIT0:
-				curMaterial = 0D;
-				break;
-			case DIGIT1:
-				curMaterial = 1.5D;
-				break;
-			case DIGIT2:
-				curMaterial = 2.5D;
-				break;
-			case DIGIT3:
-				curMaterial = 3.5D;
-				break;
-			case G:
-				curMaterial = -1D;
 			case R:
 				readMapData(maps[mapI]);
 				break;
 			//case 1 2 and 3 for material
 			default:
-				System.out.println("not player key");
+				System.out.println(arg0.getCode());
 			}
 		}
 		
@@ -223,6 +185,9 @@ public class GrenadeJumperJava extends Application {
 			case S:
 				s = false;
 				break;
+			case SPACE:
+				w=false;
+				break;
 			default:
 				System.out.println("not player key");
 			}
@@ -234,31 +199,6 @@ public class GrenadeJumperJava extends Application {
 		launch(args);
 	}	
 	
-	public void writeMapData(String path){
-		if(lines.size() > 0){//Check if customers have been stored
-			PrintWriter pWriter = null;
-			try{
-				pWriter = new PrintWriter(path);//try to open the file for writing
-			}catch(FileNotFoundException e){
-				System.out.println("Err: FileNotFoundException");
-			}
-			if(pWriter != null){
-				for(int i =0; i < lines.size(); i++){
-					pWriter.println();
-					pWriter.print(polyMat.get(i)+",");
-					double[] poly = lines.get(i);
-					for(double pos:poly){
-						pWriter.print(pos + ",");
-					}
-				}
-				pWriter.close();
-			}else{
-				System.out.println("Err: Could not open file: " + path);
-			}
-		}else{
-			System.out.println("Alert: Please store some customers before attempting to write them");
-		}
-	}
 	
 	public void readMapData(String path){
 		lines.clear();
@@ -266,57 +206,54 @@ public class GrenadeJumperJava extends Application {
 		polyMat.clear();
 		player = new Player(100,100,list,delList,lines,polyMat);
 		list.add(player);
-
-		File myFile = new File(path);
-		System.out.println("Diag: File exists?: " + myFile.exists());
-		Scanner fileScanner;
-
-		//Try and load the file into a scanner
-		try {
-			fileScanner = new Scanner(myFile);
-			System.out.println("Diag: Data read start");
-		} catch (FileNotFoundException e) {
-			System.out.println("Err: No file found");
-			fileScanner = null;
-		}
-
+		InputStream is = this.getClass().getClassLoader().getResourceAsStream(path);
+		InputStreamReader isr = new InputStreamReader(is);
+		BufferedReader fileScanner = new BufferedReader(isr);
+		
 		if(fileScanner != null){
-			if(fileScanner.hasNextLine()){
-				String myLine = fileScanner.nextLine();
-				Scanner lineScanner = new Scanner(myLine);
-				lineScanner.useDelimiter(",");
-				player.x = lineScanner.nextDouble();
-				player.y = lineScanner.nextDouble();
-				lineScanner.close();
-			}
-			boolean poly = false;
-			while(fileScanner.hasNextLine()){
-				//If the scanner loaded correctly read all the lines
-				String myLine = fileScanner.nextLine();
-				Scanner lineScanner = new Scanner(myLine);
-				lineScanner.useDelimiter(",");
-				if(myLine.startsWith("/"))
-					poly = true;
-				else if(!poly){
-					Goal g = new Goal(0,0);
-					g.x = lineScanner.nextDouble();
-					g.y = lineScanner.nextDouble();
-					list.add(g);
-				}else{
-					if(lineScanner.hasNextDouble())
-						polyMat.add(lineScanner.nextDouble());
-					ArrayList<Double> newLine = new ArrayList<Double>();
-					while(lineScanner.hasNextDouble()){
-						newLine.add(lineScanner.nextDouble());
+			String myLine;
+			try {
+				if((myLine = fileScanner.readLine()) != null){
+					Scanner lineScanner = new Scanner(myLine);
+					lineScanner.useDelimiter(",");
+					player.x = lineScanner.nextDouble();
+					player.y = lineScanner.nextDouble();
+					if(bgs[mapI] != null){
+						bgs[mapI].x = lineScanner.nextDouble();
+						bgs[mapI].y = lineScanner.nextDouble();
 					}
-					double[] arr = new double[newLine.size()];
-					for(int i =0; i<arr.length;i++)
-						arr[i] = newLine.get(i).doubleValue();
-					lines.add(arr);
+					lineScanner.close();
 				}
-				lineScanner.close();
+				boolean poly = false;
+				while((myLine = fileScanner.readLine()) != null){
+					//If the scanner loaded correctly read all the lines
+					Scanner lineScanner = new Scanner(myLine);
+					lineScanner.useDelimiter(",");
+					if(myLine.startsWith("/"))
+						poly = true;
+					else if(!poly){
+						Goal g = new Goal(0,0);
+						g.x = lineScanner.nextDouble();
+						g.y = lineScanner.nextDouble();
+						list.add(g);
+					}else{
+						if(lineScanner.hasNextDouble())
+							polyMat.add(lineScanner.nextDouble());
+						ArrayList<Double> newLine = new ArrayList<Double>();
+						while(lineScanner.hasNextDouble()){
+							newLine.add(lineScanner.nextDouble());
+						}
+						double[] arr = new double[newLine.size()];
+						for(int i =0; i<arr.length;i++)
+							arr[i] = newLine.get(i).doubleValue();
+						lines.add(arr);
+					}
+					lineScanner.close();
+				}
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-			fileScanner.close();
 		}
 	}
 
@@ -336,6 +273,7 @@ public class GrenadeJumperJava extends Application {
 		gc.setFill(Color.WHITE);
 		gc.fillRect(0,0,canvas.getWidth(),canvas.getHeight());
 		root.getChildren().add(canvas);
+		bgs[0] = new GameObject(new Image("/res/backtometal.png"), 0,0);
 		readMapData(maps[mapI]);
 		canvas.setOnMouseClicked(clickHandler);
 		canvas.setOnMouseMoved(moveHandler);
@@ -351,6 +289,15 @@ public class GrenadeJumperJava extends Application {
 			url = Grenade.class.getResource("/res/intro.wav");
 	        inputStream = AudioSystem.getAudioInputStream(url);
 	        intro.open(inputStream);
+	        intro.addLineListener(new LineListener(){
+				@Override
+				public void update(LineEvent arg0) {
+					if(arg0.getType() == LineEvent.Type.STOP){
+						loop.loop(Clip.LOOP_CONTINUOUSLY);
+				        System.out.println("llop");
+					}
+				}
+	        });
 			loop = AudioSystem.getClip();
 			url = Grenade.class.getResource("/res/loop.wav");
 	        inputStream = AudioSystem.getAudioInputStream(url);
@@ -358,7 +305,6 @@ public class GrenadeJumperJava extends Application {
 		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
 			e.printStackTrace();
 		}
-
 		if(!intro.isRunning()){
 			intro.setFramePosition(0);
 			intro.start();

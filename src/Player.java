@@ -11,10 +11,8 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 import javafx.event.Event;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.paint.Color;
 
 public class Player extends PhysicsObject {
 	private double px = 0;
@@ -132,15 +130,17 @@ public class Player extends PhysicsObject {
 			}
 		radius/=1.2;
 		y-=radius+1;
-		if(w && canJump)			
+		if(w && canJump){		
 			vely -= JUMP;
-		
-		radius *= 2;
-		if((a || d) && canJump && totalMovable){
 			if(!clip.isRunning()){
 				clip.setFramePosition(0);
 				clip.start();
-			}
+			} 
+		}
+		
+		radius *= 2;
+		if((a || d) && canJump && totalMovable){
+			//
 		}
 	}
 
