@@ -48,9 +48,16 @@ public class GrenadeJumperJava extends Application {
 	private Double curMaterial = 3.5D;
 	private int mapI = 0;
 	private Clip clip;
+	private Clip intro;
+	private Clip loop;
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
+
+			if(!intro.isRunning() && !loop.isRunning()){
+		        loop.loop(Clip.LOOP_CONTINUOUSLY);
+		        System.out.println("llop");
+			}
 			gc.setFill(Color.WHITE);
 			gc.fillRect(0,0,gc.getCanvas().getWidth(),gc.getCanvas().getHeight());
 			gc.setFill(Color.BLACK);
@@ -340,8 +347,21 @@ public class GrenadeJumperJava extends Application {
 			URL url = Grenade.class.getResource("/res/goal.wav");
 	        AudioInputStream inputStream = AudioSystem.getAudioInputStream(url);
 	        clip.open(inputStream);
+			intro = AudioSystem.getClip();
+			url = Grenade.class.getResource("/res/intro.wav");
+	        inputStream = AudioSystem.getAudioInputStream(url);
+	        intro.open(inputStream);
+			loop = AudioSystem.getClip();
+			url = Grenade.class.getResource("/res/loop.wav");
+	        inputStream = AudioSystem.getAudioInputStream(url);
+	        loop.open(inputStream);
 		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
 			e.printStackTrace();
+		}
+
+		if(!intro.isRunning()){
+			intro.setFramePosition(0);
+			intro.start();
 		}
 	}
 }
