@@ -5,7 +5,6 @@ public class Respawn extends GameObject {
 
 	public Respawn(double x, double y,GraphicsContext gc) {
 		super(new Image("/res/resp.png"), x, y,gc);
-		// TODO Auto-generated constructor stub
 	}
 	
 	public void update(){

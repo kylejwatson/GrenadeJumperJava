@@ -26,15 +26,23 @@ public class GrenadeJumperJava extends Application {
 	private Clip intro;
 	private Clip loop;
 	private String[] maps = new String[]{"res/metalLevel1","res/introToMat","res/myMap1.txt","res/myMap2.txt"};
+	private String devMap;
 	private Player player;
-	private Engine engine = new Engine();
+	private Engine engine;
 	private int mapI = 0;
+	private Stage stage;
+
+	public static void main(String[] args) {
+		launch(args);
+	}	
+	void setDevMap(String map){
+		devMap = map;
+	}
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
 			engine.update();
-			engine.cam.x = player.x;
-			engine.cam.y = player.y;
+			engine.moveCam(player.x, player.y);
 			if(player.reachGoal()){
 				if(!clip.isRunning()){
 					clip.setFramePosition(0);
@@ -63,6 +71,7 @@ public class GrenadeJumperJava extends Application {
 	private EventHandler<KeyEvent> keyDownHandler = new EventHandler<KeyEvent>(){
 		@Override
 		public void handle(KeyEvent arg0) {
+			engine.keyDown(arg0.getCode());
 			switch(arg0.getCode()){
 			case SPACE:
 				engine.w = true;
@@ -77,11 +86,23 @@ public class GrenadeJumperJava extends Application {
 			case R:
 				reload();
 				break;
+			case ESCAPE:
+				if(devMap != null){
+					GrenadeJumperMapEditor g = new GrenadeJumperMapEditor(); 
+					g.setMap(devMap);
+					try {
+
+						timer.stop();
+						engine = null;
+						g.start(stage);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
 			//case 1 2 and 3 for material
 			default:
 				System.out.println(arg0.getCode());
 			}
-			engine.keyDown(arg0.getCode());
 		}
 		
 	};
@@ -100,20 +121,19 @@ public class GrenadeJumperJava extends Application {
 		
 	};
 	void reload() {
-		engine.readMapData(maps[mapI]);
+		System.out.println(devMap);
+		if(devMap == null)
+			engine.readMapData(maps[mapI]);
+		else
+			engine.readExternalMapData(devMap);
 		player.x = engine.resp.x;
 		player.y = engine.resp.y;
 		engine.list.add(player);
 		//engine.list.add(player);
 	}
-	
-	public static void main(String[] args) {
-		launch(args);
-	}	
-	
-	
 	@Override
 	public void start(Stage stage) throws Exception {
+		this.stage = stage;
 		Pane root=new Pane();
 		Scene scene=new Scene(root,1000,630);
 		stage.setScene(scene);
@@ -124,6 +144,7 @@ public class GrenadeJumperJava extends Application {
 		canvas.setOnMouseMoved(moveHandler);
 		scene.setOnKeyPressed(keyDownHandler);
 		scene.setOnKeyReleased(keyUpHandler);
+		engine = new Engine();
 		engine.start(canvas);
 		//engine.bgs[0] = new GameObject(new Image("/res/backtometal.png"), 0,0);
 		
@@ -156,7 +177,7 @@ public class GrenadeJumperJava extends Application {
 		}
 		if(!intro.isRunning()){
 			intro.setFramePosition(0);
-			intro.start();
+			//intro.start();
 		}
 		timer.start();
 	}
