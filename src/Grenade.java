@@ -8,7 +8,6 @@ import javax.sound.sampled.Clip;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.paint.Color;
 
@@ -19,11 +18,9 @@ public class Grenade extends PhysicsObject {
 	private static final float GRAPHICS_DELAY = 0.1F;
 	private float timer = 0f;
 	private float gfxTimer = 0f;
-	private ArrayList<Double> polyMat;
 	private Clip expl;
-	public Grenade(double x, double y, ArrayList<GameObject> list, ArrayList<GameObject> delList, ArrayList<double[]> lines, ArrayList<Double> polyMat) {
-		super(new Image("/res/gren.png"), x, y, list,delList,lines);
-		this.polyMat = polyMat;
+	public Grenade(double x, double y, Engine engine) {
+		super(new Image("/res/gren.png"),x,y, engine);
 		try {
 			expl = AudioSystem.getClip();
 			URL url = Grenade.class.getResource("/res/expl.wav");
@@ -42,9 +39,9 @@ public class Grenade extends PhysicsObject {
 		}
 	}
 	
-	public void update(GraphicsContext gc){
+	public void update(){
 		
-		super.update(gc);
+		super.update();
 		timer+=0.02;
 		if(timer>DETONATE_TIME){
 			explode();
@@ -62,7 +59,7 @@ public class Grenade extends PhysicsObject {
 				expl.start();
 			}
 			gfxTimer += 0.02;
-			for(GameObject obj:list){
+			for(GameObject obj:engine.list){
 				double dist = getDistance(obj);
 				if(dist <BLAST_RADIUS && obj != this){
 					if(obj instanceof PhysicsObject){
@@ -75,9 +72,9 @@ public class Grenade extends PhysicsObject {
 					}
 				}
 			}
-			for(double[] poly : lines){
-				int polyI = lines.indexOf(poly);
-				double material = polyMat.get(polyI);
+			for(double[] poly : engine.lines){
+				int polyI = engine.lines.indexOf(poly);
+				double material = engine.polyMat.get(polyI);
 				if(material > 0){
 					boolean[] movedVert = new boolean[poly.length/2];
 					for(int i=0; i < poly.length -1; i+=2){
@@ -137,7 +134,7 @@ public class Grenade extends PhysicsObject {
 							for(int i = 0; i<newPolyArr.length; i++){
 								newPolyArr[i] = newPoly.get(i).doubleValue();
 							}
-							lines.set(polyI, newPolyArr);
+							engine.lines.set(polyI, newPolyArr);
 						}
 					}
 				}
@@ -145,7 +142,7 @@ public class Grenade extends PhysicsObject {
 		}else{
 			gfxTimer += 0.02;
 			if(gfxTimer>GRAPHICS_DELAY)
-				delList.add(this);
+				engine.delList.add(this);
 		}
 	}
 }

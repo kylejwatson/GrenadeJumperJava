@@ -32,24 +32,24 @@ public class GrenadeJumperMapEditor extends Application {
 	//private ArrayList<GameObject> delList = new ArrayList<GameObject>();
 	private double x = 0;
 	private double y = 0;
-	private Respawn resp = new Respawn(0,0);
+	//private Respawn resp = new Respawn(0,0);
 	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.jpg"),0,0,100,100,false);
 	private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
 	private ImagePattern wood = new ImagePattern(new Image("/res/wood.jpg"),0,0,100,100,false);
 	private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
-	private GameObject bg = new GameObject(new Image("/res/backtometal.png"), 0,0);
+	private GameObject bg = new GameObject(new Image("/res/backtometal.png"), 0,0,gc);
 	private Double curMaterial = 3D;
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
 			gc.save();
 			gc.translate(-x+gc.getCanvas().getWidth()/2, -y+gc.getCanvas().getHeight()/2);
-			bg.update(gc);
+			bg.update();
 			gc.setFill(Color.BLACK);
-			resp.update(gc);
+			//resp.update(gc);
 			for(GameObject obj : list)
 			{
-				obj.update(gc);
+				obj.update();
 			}
 
 			for(int i =0; i <newPoly.size() -1; i+=2){
@@ -90,11 +90,12 @@ public class GrenadeJumperMapEditor extends Application {
 			double mx = mouseEvent.getX() +x-gc.getCanvas().getWidth()/2;
 			double my = mouseEvent.getY() +y-gc.getCanvas().getHeight()/2;
 			if(mouseEvent.getButton() == MouseButton.PRIMARY){
-				if(curMaterial == -1)
-					list.add(new Goal(mx,my));
+				if(curMaterial == -1){
+					//list.add(new Goal(mx,my));
+				}
 				else if(curMaterial == -2){
-					resp.x = mx;
-					resp.y = my;
+					//resp.x = mx;
+					//resp.y = my;
 				}else if(curMaterial == -3){
 					bg.x = mx;
 					bg.y = my;
@@ -242,7 +243,7 @@ public class GrenadeJumperMapEditor extends Application {
 				System.out.println("Err: FileNotFoundException");
 			}
 			if(pWriter != null){
-				pWriter.println(resp.x + "," + resp.y +","+bg.x+","+bg.y);
+				//pWriter.println(resp.x + "," + resp.y +","+bg.x+","+bg.y);
 				for(GameObject g : list)
 					pWriter.println(g.x + "," + g.y);
 				pWriter.println("/");
@@ -295,8 +296,8 @@ public class GrenadeJumperMapEditor extends Application {
 				String myLine = fileScanner.nextLine();
 				Scanner lineScanner = new Scanner(myLine);
 				lineScanner.useDelimiter(",");
-				resp.x = lineScanner.nextDouble();
-				resp.y = lineScanner.nextDouble();
+				//resp.x = lineScanner.nextDouble();
+				//resp.y = lineScanner.nextDouble();
 				if(lineScanner.hasNextDouble()){
 					bg.x = lineScanner.nextDouble();
 					bg.y = lineScanner.nextDouble();
@@ -312,10 +313,10 @@ public class GrenadeJumperMapEditor extends Application {
 				if(myLine.startsWith("/"))
 					poly = true;
 				else if(!poly){
-					Goal g = new Goal(0,0);
-					g.x = lineScanner.nextDouble();
-					g.y = lineScanner.nextDouble();
-					list.add(g);
+					//Goal g = new Goal(0,0);
+					//g.x = lineScanner.nextDouble();
+					///g.y = lineScanner.nextDouble();
+					//list.add(g);
 				}else{
 					if(lineScanner.hasNextDouble())
 						polyMat.add(lineScanner.nextDouble());

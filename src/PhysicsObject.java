@@ -1,33 +1,19 @@
-
-import java.util.ArrayList;
-
 import javax.sound.sampled.Clip;
-
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
-import javafx.scene.paint.Color;
 
 public class PhysicsObject extends GameObject{
-	protected GraphicsContext gc;
 	private static final double GRAV = 0.3;
 	private static final double FRIC = 0.3;
 	protected double velx = 0;
 	protected double vely = 0;
-	protected ArrayList<GameObject> list;
-	protected ArrayList<GameObject> delList;
-	protected ArrayList<double[]> lines = new ArrayList<double[]>();
+	protected Engine engine;
 	protected Clip clip;
-	public PhysicsObject(Image img, double x, double y,ArrayList<GameObject> list,ArrayList<GameObject> delList, ArrayList<double[]> lines) {
-		super(img, x, y);
-		this.list = list;
-		this.delList = delList;
-		this.lines = lines;
-		
-		// TODO Auto-generated constructor stub
+	public PhysicsObject(Image img, double x, double y,Engine engine) {
+		super(img, x, y, engine.gc);
+		this.engine = engine;
 	}
 
-	public void update(GraphicsContext gc){
-		this.gc = gc;
+	public void update(){
 		vely += GRAV;
 		if(Math.abs(velx)<0.3)
 			velx = 0;
@@ -43,14 +29,13 @@ public class PhysicsObject extends GameObject{
 		x += velx;
 		y += vely;
 		
-		
-		super.update(gc);
+		super.update();
 		//gc.fillOval(x-radius, y-radius, radius*2, radius*2);
 	}
 
 	private void collisionResolution(){
 		boolean hit = false;
-		for(double[] poly : lines){
+		for(double[] poly : engine.lines){
 			for(int i=0; i < poly.length -1; i+=2){
 				int i2 = i+2; 
 				if(i2 == poly.length)
@@ -125,7 +110,6 @@ public class PhysicsObject extends GameObject{
 		double B = 2 *(dx *(lx1 - x0) + dy * (ly1-y0));
 		double C = (lx1 - x0) * (lx1 -x0) + (ly1 - y0) * (ly1 - y0) - radius*radius;
 		double det = Math.sqrt(B*B - 4*A*C);
-		gc.setFill(Color.BLUE);
 		double t = (-B - det)/(2*A);
 		double t2 = (-B + det)/(2*A);
 		return new double[]{(lx1 + t * dx),(ly1 + t * dy),(lx1 + t2 * dx), (ly1 + t2 * dy)};
@@ -196,7 +180,6 @@ public class PhysicsObject extends GameObject{
 				ypo >= Math.min(y1,y2) && ypo <= Math.max(y1,y2) &&
 				ypo >= Math.min(y3,y4) && ypo <= Math.max(y3,y4)){
 
-				gc.strokeOval(xpo-3, ypo-3, 6, 6);
 				return new double[]{xpo,ypo};
 			}
 		}
@@ -204,30 +187,12 @@ public class PhysicsObject extends GameObject{
 	}
 	
 	public boolean feetOnGround(){
-		for(GameObject go : list){
-			if(go != this || go.y > this.y + radius){
-				double vecx = x-go.x;
-				double vecy = y+radius-go.y;
-				double dist = Math.abs(Math.sqrt(Math.pow(vecx, 2)+Math.pow(vecy, 2)));
-				if(dist<go.radius + radius){
-					return true;
-				}
-			}
-		}
 		return false;
+		//redo this
 	}	
 	public boolean headOnCeil(){
-		for(GameObject go : list){
-			if(go != this || go.y < this.y - radius*1.8){
-				double vecx = x-go.x;
-				double vecy = y-radius-go.y;
-				double dist = Math.abs(Math.sqrt(Math.pow(vecx, 2)+Math.pow(vecy, 2)));
-				if(dist<go.radius  + radius*0.9){
-					return true;
-				}
-			}
-		}
 		return false;
+		//redo this
 	}
 	
 	public void addVelocity(double newVelx, double newVely) {

@@ -1,6 +1,5 @@
 import java.io.IOException;
 import java.net.URL;
-import java.util.ArrayList;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -9,24 +8,21 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import javafx.event.Event;
-import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.image.Image;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 
 public class Player extends PhysicsObject {
 	private double px = 0;
-	private double py = 0 ;
+	private double py = 0;
 	private double mx = 0;
-	private double my = 0 ;
-	private ArrayList<Double> polyMat;
+	private double my = 0;
 	private Clip clip;
 	private static final float SPEED = 3;
 	private static final float JUMP = 5;
 	private static final double MAX_SPEED = 4;
-	public Player(double x, double y, ArrayList<GameObject>list,ArrayList<GameObject>delList, ArrayList<double[]> lines, ArrayList<Double> polyMat) {
-		super(new Image("/res/char.png"),x,y,list,delList,lines);
-		this.polyMat = polyMat;
+	public Player(double x, double y, Engine engine) {
+		super(new Image("/res/char.png"),x,y,engine);
 		try {
 			clip = AudioSystem.getClip();
 			URL url = Grenade.class.getResource("/res/walk.wav");
@@ -37,8 +33,8 @@ public class Player extends PhysicsObject {
 		}
 	}
 
-	public void update(GraphicsContext gc){
-		this.gc = gc;
+	public void update(){
+		keyInput();
 		double vecx = 500 - mx;
 		double vecy = 315 - my;
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
@@ -49,17 +45,17 @@ public class Player extends PhysicsObject {
 		px = x+vecx*50;
 		py = y+vecy*50;
 		gc.strokeLine(x, y, px, py);
-		super.update(gc);
+		super.update();
 	}
 
-	public void keyInput(boolean a,boolean d,boolean s,boolean w, int wHeld){
+	public void keyInput(){
 		radius /= 2;
 		boolean totalMovable = false;
-		if(a){
+		if(engine.a){
 			boolean moveable = true;
 			x-=radius+5;
 			loop1:
-				for(double[] poly : lines){
+				for(double[] poly : engine.lines){
 					for(int i=0; i < poly.length -1; i+=2){
 						int i2 = i+2; 
 						if(i2 == poly.length)
@@ -82,11 +78,11 @@ public class Player extends PhysicsObject {
 					velx = -MAX_SPEED;
 			}
 		}
-		if(d){
+		if(engine.d){
 			boolean moveable = true;
 			x+=radius+5;
 			loop1:
-				for(double[] poly : lines){
+				for(double[] poly : engine.lines){
 					for(int i=0; i < poly.length -1; i+=2){
 						int i2 = i+2; 
 						if(i2 == poly.length)
@@ -113,7 +109,7 @@ public class Player extends PhysicsObject {
 		y+=radius+1;
 		radius*=1.2;
 		loop1:
-			for(double[] poly : lines){
+			for(double[] poly : engine.lines){
 				for(int i=0; i < poly.length -1; i+=2){
 					int i2 = i+2; 
 					if(i2 == poly.length)
@@ -130,7 +126,7 @@ public class Player extends PhysicsObject {
 			}
 		radius/=1.2;
 		y-=radius+1;
-		if(w && canJump){		
+		if(engine.w && canJump){		
 			vely -= JUMP;
 			if(!clip.isRunning()){
 				clip.setFramePosition(0);
@@ -139,7 +135,7 @@ public class Player extends PhysicsObject {
 		}
 		
 		radius *= 2;
-		if((a || d) && canJump && totalMovable){
+		if((engine.a || engine.d) && canJump && totalMovable){
 			//
 		}
 	}
@@ -158,9 +154,9 @@ public class Player extends PhysicsObject {
 		vecy = vecy/dist;
 		vecx = -vecx;
 		vecy = -vecy;
-		Grenade g = new Grenade(this.x,this.y,list,delList,lines,polyMat);
+		Grenade g = new Grenade(this.x,this.y,engine);
 		g.addVelocity(vecx*10, vecy*10);
-		list.add(g);
+		engine.list.add(g);
 	}
 	
 	public void mouseDown(MouseEvent me){
@@ -171,10 +167,10 @@ public class Player extends PhysicsObject {
 		vecy = vecy/dist;
 		vecx = -vecx;
 		vecy = -vecy;
-		Grenade g = new Grenade(x,y,list,delList,lines,polyMat);
+		Grenade g = new Grenade(x,y,engine);
 		if(me.getButton() == MouseButton.PRIMARY){
 			g.addVelocity(vecx*10, vecy*10);
-			list.add(g);
+			engine.list.add(g);
 		}
 	}
 
@@ -182,7 +178,7 @@ public class Player extends PhysicsObject {
 	}
 
 	public boolean reachGoal() {
-		for(GameObject g:list){
+		for(GameObject g : engine.list){
 			if(g instanceof Goal){
 				if(getDistance(g) < radius+g.radius)
 					return true;
