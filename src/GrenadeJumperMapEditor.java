@@ -26,7 +26,7 @@ public class GrenadeJumperMapEditor extends Application {
 	private GameObject bg = new GameObject(new Image("/res/backtometal.png"), 0,0,engine.gc);
 	private Double curMaterial = 3D;
 	private GameObject g;
-	private Double[] p;
+	private int p = -1;
 	private GrenadeJumperJava gj;
 
 	public static void main(String[] args) {
@@ -51,55 +51,75 @@ public class GrenadeJumperMapEditor extends Application {
 			for(int i =0; i <newPoly.size() -1; i+=2){
 				engine.gc.strokeOval(newPoly.get(i)-3, newPoly.get(i+1)-3, 6, 6);
 			}
+			if(g != null){
+				engine.gc.fillOval(g.x-g.radius, g.y-g.radius, g.radius*2,g.radius*2);
+			}
 			engine.gc.restore();
 			engine.gc.strokeText("Current: " + curMaterial, 30, 10);
 		} 
 	};
 
+	private int selectLine(double x, double y){
+		for(int k=0; k< engine.lines.size(); k++){
+			double[] poly = engine.lines.get(k);
+			for(int i=0; i < poly.length -1; i+=2){
+				double vecx = poly[i] - x;
+				double vecy = poly[i+1] - y;
+				double dist = Math.sqrt(vecx*vecx + vecy*vecy);
+				if(dist < 10){
+					return k;
+				}
+			}
+		}
+		return -1;
+	}
+	private GameObject selectObject(double x, double y){
+		for(GameObject g:engine.list){
+			double vecx = g.x - x;
+			double vecy = g.y - y;
+			double dist = Math.sqrt(vecx*vecx + vecy*vecy);
+			if(dist < g.radius){
+				return g;
+			}
+		}
+		return null;
+	}
 	private EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>(){
 		@Override
 		public void handle(MouseEvent mouseEvent){
 			double mx = mouseEvent.getX() +engine.cam.x;
 			double my = mouseEvent.getY() +engine.cam.y;
 			if(mouseEvent.getButton() == MouseButton.PRIMARY){
-				if(curMaterial == -1){
-					engine.list.add(new Goal(mx,my,engine.gc));
+				if(g != null){
+					g = null;
+					curMaterial = 0D;
+				}else if(p > -1){
+					p = -1;
+					curMaterial = 0D;
+				}else if(newPoly.isEmpty()){
+					g = selectObject(mx,my);
+					p = selectLine(mx,my);
 				}
-				else if(curMaterial == -2){
-					engine.resp.x = mx;
-					engine.resp.y = my;
-				}else if(curMaterial == -3){
-					bg.x = mx;
-					bg.y = my;
-				}else if(newPoly.isEmpty() || newPoly.get(newPoly.size()-1) != my && newPoly.get(newPoly.size()-2) != mx){
-					newPoly.add(mx);
-					newPoly.add(my);
-				}
-			}else if(mouseEvent.getButton() == MouseButton.SECONDARY){
-				ArrayList<Integer> del = new ArrayList<Integer>();
-				for(int k=0; k< engine.lines.size(); k++){
-					double[] poly = engine.lines.get(k);
-					for(int i=0; i < poly.length -1; i+=2){
-						double vecx = poly[i] - mx;
-						double vecy = poly[i+1] - my;
-						double dist = Math.sqrt(vecx*vecx + vecy*vecy);
-						if(dist < 10){
-							del.add(k);
-						}
+				if(g == null && p == -1){
+					if(curMaterial == -1){
+						engine.list.add(new Goal(mx,my,engine.gc));
+					}
+					else if(curMaterial == -2){
+						engine.resp.x = mx;
+						engine.resp.y = my;
+					}else if(curMaterial == -3){
+						bg.x = mx;
+						bg.y = my;
 					}
 				}
-				for(int i : del){
+				
+			}else if(mouseEvent.getButton() == MouseButton.SECONDARY){
+				int i = selectLine(mx,my);
+				if(i > -1){
 					engine.lines.remove(i);
 					engine.polyMat.remove(i);
 				}
-				for(GameObject g:engine.list){
-					double vecx = g.x - mx;
-					double vecy = g.y - my;
-					double dist = Math.sqrt(vecx*vecx + vecy*vecy);
-					if(dist < g.radius){
-						engine.delList.add(g);
-					}
-				}
+				engine.delList.add(selectObject(mx,my));
 			}
 		}
 	};
@@ -185,7 +205,22 @@ public class GrenadeJumperMapEditor extends Application {
 			}
 		}
 	};
-	
+	private EventHandler<MouseEvent> moveHandler = new EventHandler<MouseEvent>(){
+		@Override
+		public void handle(MouseEvent event) {
+			if(g != null){
+				g.x = event.getX() - engine.hWidth;
+				g.y = event.getY() - engine.hHeight;
+			}else if(p > -1){
+				double xvec = engine.lines.get(p)[0] - event.getX() + engine.hWidth;
+				double yvec = engine.lines.get(p)[1] - event.getY() + engine.hHeight;
+				for(int i=0; i < engine.lines.get(p).length -1; i+=2){
+					engine.lines.get(p)[i] -= xvec;
+					engine.lines.get(p)[i+1] -= yvec;
+				}
+			}
+		}
+	};
 	public void writeMapData(){
 		//Create a frame for the file dialog box to get a path for the file
 		Frame myFrame = new Frame();
@@ -243,6 +278,7 @@ public class GrenadeJumperMapEditor extends Application {
 		Canvas canvas = new Canvas(1000,630);
 		root.getChildren().add(canvas);
 		canvas.setOnMouseClicked(clickHandler);
+		canvas.setOnMouseMoved(moveHandler);
 		scene.setOnKeyPressed(keyDownHandler);
 		scene.setOnKeyReleased(keyUpHandler);
 		stage.setOnCloseRequest(new EventHandler<WindowEvent>(){
