@@ -13,6 +13,7 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -28,7 +29,7 @@ public class GrenadeJumperJava extends Application {
 	private Clip loop;
 	private String[] maps = new String[]{"res/metalLevel1","res/introToMat","res/myMap1.txt","res/myMap2.txt"};
 	private ArrayList<Goal> goals = new ArrayList<Goal>();
-	private String devMap;
+	public String devMap;
 	private Player player;
 	private Engine engine;
 	private int mapI = 0;
@@ -36,11 +37,11 @@ public class GrenadeJumperJava extends Application {
 
 	public static void main(String[] args) {
 		launch(args);
-	}	
+	}
 	void setDevMap(String map){
 		devMap = map;
 	}
-	private AnimationTimer timer = new AnimationTimer() {
+	public AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
 			engine.update();
@@ -156,6 +157,10 @@ public class GrenadeJumperJava extends Application {
 		player.x = engine.resp.x;
 		player.y = engine.resp.y;
 		engine.list.add(player);
+	}
+	@Override
+	public void stop(){
+		System.out.println("main exit");
 	}
 	@Override
 	public void start(Stage stage) throws Exception {

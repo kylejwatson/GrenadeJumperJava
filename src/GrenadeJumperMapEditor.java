@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -15,6 +16,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 
 public class GrenadeJumperMapEditor extends Application {
 	private Engine engine = new Engine();
@@ -23,6 +25,9 @@ public class GrenadeJumperMapEditor extends Application {
 	private String curMap;
 	private GameObject bg = new GameObject(new Image("/res/backtometal.png"), 0,0,engine.gc);
 	private Double curMaterial = 3D;
+	private GameObject g;
+	private Double[] p;
+	private GrenadeJumperJava gj;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -131,14 +136,15 @@ public class GrenadeJumperMapEditor extends Application {
 				break;
 			case P:
 				if(ctrl){
-					GrenadeJumperJava g = new GrenadeJumperJava();
-					g.setDevMap(curMap);
+					gj = new GrenadeJumperJava();
+					gj.setDevMap(curMap);
 					Pane root = new Pane();
 					Scene scene=new Scene(root,500,315);
+					
 					Stage stage = new Stage();
 					stage.setScene(scene);
 					try {
-						g.start(stage);
+						gj.start(stage);
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
@@ -161,7 +167,7 @@ public class GrenadeJumperMapEditor extends Application {
 					newPoly.clear();						
 				}
 			default:
-				System.out.println("not player key");
+				//System.out.println("not player key");
 			}
 		}
 
@@ -186,7 +192,7 @@ public class GrenadeJumperMapEditor extends Application {
 		FileDialog myDial = new FileDialog(myFrame,"Open",FileDialog.LOAD);
 		myDial.setVisible(true);
 		String fullPath = myDial.getDirectory() + myDial.getFile();
-		System.out.println("Diag: File path: " + fullPath);
+		myFrame.dispose();
 		writeMapData(fullPath);
 	}
 	public void writeMapData(String path){
@@ -225,11 +231,8 @@ public class GrenadeJumperMapEditor extends Application {
 		FileDialog myDial = new FileDialog(myFrame,"Open",FileDialog.LOAD);
 		myDial.setVisible(true);
 		String fullPath = myDial.getDirectory() + myDial.getFile();
-		System.out.println("Diag: File path: " + fullPath);
+		myFrame.dispose();
 		curMap = engine.readExternalMapData(fullPath);
-	}
-	void setMap(String map){
-		curMap = map;
 	}
 	@Override
 	public void start(Stage stage) throws Exception {
@@ -242,6 +245,12 @@ public class GrenadeJumperMapEditor extends Application {
 		canvas.setOnMouseClicked(clickHandler);
 		scene.setOnKeyPressed(keyDownHandler);
 		scene.setOnKeyReleased(keyUpHandler);
+		stage.setOnCloseRequest(new EventHandler<WindowEvent>(){
+			@Override
+			public void handle(WindowEvent arg0) {
+				Platform.exit();
+			}
+		});
 		engine.start(canvas);
 		if(curMap != null)
 			engine.readExternalMapData(curMap);
