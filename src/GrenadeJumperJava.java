@@ -1,5 +1,6 @@
 import java.io.IOException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.Random;
 
 import javax.sound.sampled.AudioInputStream;
@@ -26,10 +27,12 @@ public class GrenadeJumperJava extends Application {
 	private Clip intro;
 	private Clip loop;
 	private String[] maps = new String[]{"res/metalLevel1","res/introToMat","res/myMap1.txt","res/myMap2.txt"};
+	private ArrayList<Goal> goals = new ArrayList<Goal>();
 	private String devMap;
 	private Player player;
 	private Engine engine;
 	private int mapI = 0;
+	private boolean camLock = false;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -41,7 +44,28 @@ public class GrenadeJumperJava extends Application {
 		@Override
 		public void handle(long now) {
 			engine.update();
-			engine.moveCam(player.x, player.y);
+			if(camLock)
+				engine.moveCam(player.x, player.y);
+			else{
+				engine.cam.x += engine.hWidth;
+				engine.cam.y += engine.hHeight;
+				double dist = player.getDistance(engine.cam);
+				engine.cam.x -= engine.hWidth;
+				engine.cam.y -= engine.hHeight;
+				double xvec = goals.get(0).x - player.x;
+				double yvec = goals.get(0).y - player.y;
+				//engine.gc.strokeLine(500, 315, 500-xvec/20, 315-yvec/20);
+				if(dist<10)
+					camLock = true;
+				else if(dist < 100){
+					engine.cam.x -= xvec*(dist/10000);
+					engine.cam.y -= yvec*(dist/10000);
+				}else{
+					//System.out.println(dist);
+					engine.cam.x -= xvec/100;
+					engine.cam.y -= yvec/100;
+				}
+			}
 			if(player.reachGoal()){
 				if(!clip.isRunning()){
 					clip.setFramePosition(0);
@@ -58,7 +82,8 @@ public class GrenadeJumperJava extends Application {
 	private EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>(){
 		@Override
 		public void handle(MouseEvent mouseEvent){
-			player.mouseDown(mouseEvent);
+			if(camLock)
+				player.mouseDown(mouseEvent);
 		}
 	};
 	private EventHandler<MouseEvent> moveHandler = new EventHandler<MouseEvent>(){
@@ -70,17 +95,20 @@ public class GrenadeJumperJava extends Application {
 	private EventHandler<KeyEvent> keyDownHandler = new EventHandler<KeyEvent>(){
 		@Override
 		public void handle(KeyEvent arg0) {
-			engine.keyDown(arg0.getCode());
+			if(camLock)
+				engine.keyDown(arg0.getCode());
 			switch(arg0.getCode()){
 			case SPACE:
-				engine.w = true;
+				if(camLock)
+					engine.w = true;
 				break;
 			case BACK_QUOTE:
 				Random rand = new Random();
 
-				double  x = rand.nextDouble()*1000-500;
-				double  y = rand.nextDouble()*630-315;
-				player.throwNade(x, y);
+				double  x = rand.nextDouble()*engine.hWidth*2-engine.hWidth;
+				double  y = rand.nextDouble()*engine.hHeight*2-engine.hHeight;
+				if(camLock)
+					player.throwNade(x, y);
 				break;
 			case R:
 				reload();
@@ -114,19 +142,35 @@ public class GrenadeJumperJava extends Application {
 			engine.readMapData(maps[mapI]);
 		else
 			engine.readExternalMapData(devMap);
+		goals.clear();
+		for(GameObject g : engine.list){
+			if(g instanceof Goal)
+				goals.add((Goal)g);
+		}
+		camLock = true;
+		if(!goals.isEmpty()){
+			camLock = false;
+			engine.moveCam(goals.get(0).x, goals.get(0).y);
+		}
 		player = new Player(100,100,engine);
 		player.x = engine.resp.x;
 		player.y = engine.resp.y;
 		engine.list.add(player);
-		//engine.list.add(player);
 	}
 	@Override
 	public void start(Stage stage) throws Exception {
 		Pane root=new Pane();
-		Scene scene=new Scene(root,1000,630);
-		stage.setScene(scene);
+		Scene scene;
+		if(stage.getScene() != null){
+			scene = stage.getScene();
+			scene.setRoot(root);
+		}else{
+			scene=new Scene(root,1000,630);
+			stage.setScene(scene);
+		}
 		stage.show();
-		Canvas canvas = new Canvas(1000,630);
+		
+		Canvas canvas = new Canvas(scene.getWidth(),scene.getHeight());
 		root.getChildren().add(canvas);
 		canvas.setOnMouseClicked(clickHandler);
 		canvas.setOnMouseMoved(moveHandler);

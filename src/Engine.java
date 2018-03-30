@@ -28,6 +28,8 @@ public class Engine {
 	private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
 	private ImagePattern wood = new ImagePattern(new Image("/res/wood.jpg"),0,0,100,100,false);
 	private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
+	double hWidth;
+	double hHeight;
 	GameObject cam = new GameObject(0,0);
 	GameObject resp;
 	//GameObject[] bgs = new GameObject[maps.length];
@@ -35,13 +37,13 @@ public class Engine {
 	}
 
 	public void moveCam(double x, double y){
-		cam.x = x-gc.getCanvas().getWidth()/2;
-		cam.y = y-gc.getCanvas().getHeight()/2;
+		cam.x = x-hWidth;
+		cam.y = y-hHeight;
 	}
 
 	public void update() {
 		gc.setFill(Color.WHITE);
-		gc.fillRect(0,0,gc.getCanvas().getWidth(),gc.getCanvas().getHeight());
+		gc.fillRect(0,0,hWidth*2,hHeight*2);
 		gc.setFill(Color.BLACK);
 		gc.save();
 		gc.translate(-cam.x, -cam.y);
@@ -77,6 +79,10 @@ public class Engine {
 	} 
 
 	public void readMapData(String path){
+		a = false;
+		s = false;
+		d = false;
+		w = false;
 		lines.clear();
 		list.clear();
 		polyMat.clear();
@@ -189,6 +195,8 @@ public class Engine {
 
 	void start(Canvas canvas){
 		gc = canvas.getGraphicsContext2D();
+		hWidth = canvas.getWidth()/2;
+		hHeight = canvas.getHeight()/2;
 		resp = new Respawn(0,0,gc);
 		moveCam(resp.x, resp.y);
 	}

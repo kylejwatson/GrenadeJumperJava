@@ -35,8 +35,8 @@ public class Player extends PhysicsObject {
 
 	public void update(){
 		keyInput();
-		double vecx = 500 - mx;
-		double vecy = 315 - my;
+		double vecx = engine.hWidth - mx;
+		double vecy = engine.hHeight - my;
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
 		vecx = vecx/dist;
 		vecy = vecy/dist;
@@ -160,8 +160,8 @@ public class Player extends PhysicsObject {
 	}
 	
 	public void mouseDown(MouseEvent me){
-		double vecx = 500 - me.getX();
-		double vecy = 315 - me.getY();
+		double vecx = engine.hWidth - me.getX();
+		double vecy = engine.hHeight - me.getY();
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
 		vecx = vecx/dist;
 		vecy = vecy/dist;

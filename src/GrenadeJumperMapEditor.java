@@ -4,8 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
-import com.sun.media.jfxmediaimpl.platform.Platform;
-
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
@@ -135,8 +133,12 @@ public class GrenadeJumperMapEditor extends Application {
 				if(ctrl){
 					GrenadeJumperJava g = new GrenadeJumperJava();
 					g.setDevMap(curMap);
+					Pane root = new Pane();
+					Scene scene=new Scene(root,500,315);
+					Stage stage = new Stage();
+					stage.setScene(scene);
 					try {
-						g.start(new Stage());
+						g.start(stage);
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}
