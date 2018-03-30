@@ -30,7 +30,6 @@ public class GrenadeJumperJava extends Application {
 	private Player player;
 	private Engine engine;
 	private int mapI = 0;
-	private Stage stage;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -87,18 +86,7 @@ public class GrenadeJumperJava extends Application {
 				reload();
 				break;
 			case ESCAPE:
-				if(devMap != null){
-					GrenadeJumperMapEditor g = new GrenadeJumperMapEditor(); 
-					g.setMap(devMap);
-					try {
-
-						timer.stop();
-						engine = null;
-						g.start(stage);
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-				}
+				break;
 			//case 1 2 and 3 for material
 			default:
 				System.out.println(arg0.getCode());
@@ -126,6 +114,7 @@ public class GrenadeJumperJava extends Application {
 			engine.readMapData(maps[mapI]);
 		else
 			engine.readExternalMapData(devMap);
+		player = new Player(100,100,engine);
 		player.x = engine.resp.x;
 		player.y = engine.resp.y;
 		engine.list.add(player);
@@ -133,7 +122,6 @@ public class GrenadeJumperJava extends Application {
 	}
 	@Override
 	public void start(Stage stage) throws Exception {
-		this.stage = stage;
 		Pane root=new Pane();
 		Scene scene=new Scene(root,1000,630);
 		stage.setScene(scene);
@@ -148,7 +136,7 @@ public class GrenadeJumperJava extends Application {
 		engine.start(canvas);
 		//engine.bgs[0] = new GameObject(new Image("/res/backtometal.png"), 0,0);
 		
-		player = new Player(100,100,engine);
+		
 		reload();
 		try {
 			clip = AudioSystem.getClip();

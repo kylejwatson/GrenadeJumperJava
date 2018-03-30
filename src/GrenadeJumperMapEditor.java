@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
+import com.sun.media.jfxmediaimpl.platform.Platform;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.event.EventHandler;
@@ -23,7 +25,6 @@ public class GrenadeJumperMapEditor extends Application {
 	private String curMap;
 	private GameObject bg = new GameObject(new Image("/res/backtometal.png"), 0,0,engine.gc);
 	private Double curMaterial = 3D;
-	private Stage stage;
 
 	public static void main(String[] args) {
 		launch(args);
@@ -135,11 +136,9 @@ public class GrenadeJumperMapEditor extends Application {
 					GrenadeJumperJava g = new GrenadeJumperJava();
 					g.setDevMap(curMap);
 					try {
-						timer.stop();
-						engine = null;
-						g.start(stage);
-					} catch (Exception e) {
-						e.printStackTrace();
+						g.start(new Stage());
+					} catch (Exception e1) {
+						e1.printStackTrace();
 					}
 				}
 				curMaterial = -2D;
@@ -197,7 +196,7 @@ public class GrenadeJumperMapEditor extends Application {
 				System.out.println("Err: FileNotFoundException");
 			}
 			if(pWriter != null){
-				//pWriter.println(resp.x + "," + resp.y +","+bg.x+","+bg.y);
+				pWriter.println(engine.resp.x + "," + engine.resp.y +","+bg.x+","+bg.y);
 				for(GameObject g : engine.list)
 					pWriter.println(g.x + "," + g.y);
 				pWriter.println("/");
@@ -232,7 +231,6 @@ public class GrenadeJumperMapEditor extends Application {
 	}
 	@Override
 	public void start(Stage stage) throws Exception {
-		this.stage = stage;
 		Pane root=new Pane();
 		Scene scene=new Scene(root,1000,630);
 		stage.setScene(scene);
