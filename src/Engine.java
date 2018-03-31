@@ -34,8 +34,6 @@ public class Engine {
 	GameObject resp;
 	//GameObject[] bgs = new GameObject[maps.length];
 	public Engine() {
-
-		Goal.graphic = new Image("/res/goal.png");
 	}
 
 	public void moveCam(double x, double y){
@@ -138,10 +136,12 @@ public class Engine {
 		}
 	}
 	public String readExternalMapData(String path){
+		return readExternalMapData(new File(path));
+	}
+	public String readExternalMapData(File file){
 		lines.clear();
 		list.clear();
 		polyMat.clear();
-		File file = new File(path);
 		Scanner fileScanner = null;
 		try {
 			fileScanner = new Scanner(file);
@@ -190,7 +190,7 @@ public class Engine {
 				lineScanner.close();
 			}
 			fileScanner.close();
-			return path;
+			return file.getAbsolutePath();
 		}
 		return null;
 	}
@@ -199,6 +199,8 @@ public class Engine {
 		gc = canvas.getGraphicsContext2D();
 		hWidth = canvas.getWidth()/2;
 		hHeight = canvas.getHeight()/2;
+		Goal.graphic = new Image("/res/goal.png");
+		new Grenade(0,0,this);
 		resp = new Respawn(0,0,gc);
 		moveCam(resp.x, resp.y);
 	}

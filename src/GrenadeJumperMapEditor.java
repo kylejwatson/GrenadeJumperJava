@@ -1,5 +1,6 @@
 import java.awt.FileDialog;
 import java.awt.Frame;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
@@ -7,17 +8,29 @@ import java.util.ArrayList;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
+import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.TilePane;
+import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
@@ -37,6 +50,7 @@ public class GrenadeJumperMapEditor extends Application {
 	private Image wood;
 	private Image brick;
 	private Image metal;
+	private Stage stage;
 	
 
 	public static void main(String[] args) {
@@ -55,7 +69,7 @@ public class GrenadeJumperMapEditor extends Application {
 				 engine.cam.y += 10;
 			
 			engine.update();
-			engine.gc.strokeText("Current: " + curMaterial, 30, 10);
+			engine.gc.strokeText("Current: " + curMap, 30, 10);
 			if(g != null)
 				engine.gc.drawImage(g.img,30,40);
 			else{
@@ -162,13 +176,13 @@ public class GrenadeJumperMapEditor extends Application {
 	private EventHandler<KeyEvent> keyDownHandler = new EventHandler<KeyEvent>(){
 		@Override
 		public void handle(KeyEvent arg0) {
-			engine.keyDown(arg0.getCode());
+			if(!ctrl)
+				engine.keyDown(arg0.getCode());
 			switch(arg0.getCode()){
 			case S:
 				if(ctrl)
 					writeMapData();
 				ctrl = false;
-				System.out.println(ctrl);
 				break;
 			case O:
 				if(ctrl)
@@ -193,9 +207,11 @@ public class GrenadeJumperMapEditor extends Application {
 			case P:
 				if(ctrl)
 					play();
-				
-				g = engine.resp;
-				moving = true;
+				else{
+					g = engine.resp;
+					moving = true;
+				}
+				ctrl = false;
 				break;
 			case B:
 				curMaterial = -3D;
@@ -216,6 +232,7 @@ public class GrenadeJumperMapEditor extends Application {
 			default:
 				//System.out.println("not player key");
 			}
+
 		}
 
 	};
@@ -252,12 +269,14 @@ public class GrenadeJumperMapEditor extends Application {
 	};
 	public void writeMapData(){
 		//Create a frame for the file dialog box to get a path for the file
-		Frame myFrame = new Frame();
-		FileDialog myDial = new FileDialog(myFrame,"Open",FileDialog.LOAD);
-		myDial.setVisible(true);
-		String fullPath = myDial.getDirectory() + myDial.getFile();
-		myFrame.dispose();
-		writeMapData(fullPath);
+		FileChooser fileC = new FileChooser();
+		fileC.setTitle("Save Map File");
+		fileC.setInitialDirectory(new File("C:/Users/Kylw/workspace"));
+		writeMapData(fileC.showSaveDialog(stage));
+	}
+	
+	public void writeMapData(File file){
+		writeMapData(file.getAbsolutePath());
 	}
 	public void writeMapData(String path){
 		if(engine.lines.size() > 0){//Check if customers have been stored
@@ -291,12 +310,11 @@ public class GrenadeJumperMapEditor extends Application {
 	}
 	
 	public void readMapData(){
-		Frame myFrame = new Frame();
-		FileDialog myDial = new FileDialog(myFrame,"Open",FileDialog.LOAD);
-		myDial.setVisible(true);
-		String fullPath = myDial.getDirectory() + myDial.getFile();
-		myFrame.dispose();
-		curMap = engine.readExternalMapData(fullPath);
+		FileChooser fileC = new FileChooser();
+		fileC.setTitle("Open Map File");
+		fileC.setInitialDirectory(new File("C:/Users/Kylw/workspace"));
+		curMap = engine.readExternalMapData(fileC.showOpenDialog(stage));
+		//stage.requestFocus();
 	}
 	public void endPoly(){
 		if(newPoly.size() > 2){
@@ -343,10 +361,14 @@ public class GrenadeJumperMapEditor extends Application {
 		drawing = false;
 	}
 	public void play(){
+		if(curMap == null)
+			writeMapData();
+		else
+			writeMapData(curMap);
 		gj = new GrenadeJumperJava();
 		gj.setDevMap(curMap);
 		Pane root = new Pane();
-		Scene scene=new Scene(root,500,315);
+		Scene scene=new Scene(root,1280,720);
 		
 		Stage stage = new Stage();
 		stage.setScene(scene);
@@ -358,6 +380,7 @@ public class GrenadeJumperMapEditor extends Application {
 	}
 	@Override
 	public void start(Stage stage) throws Exception {
+		this.stage = stage;
 		Pane root=new Pane();
 		Scene scene=new Scene(root,1000,630);
 		stage.setScene(scene);
@@ -365,7 +388,15 @@ public class GrenadeJumperMapEditor extends Application {
 		Canvas canvas = new Canvas(800,630);
 		canvas.setLayoutX(200);
 		root.getChildren().add(canvas);
+		VBox sideBar = new VBox();
+		sideBar.setSpacing(20);
+		sideBar.setPadding(new Insets(30,10,10,10));
+		root.getChildren().add(sideBar);
 		engine.start(canvas);
+		TilePane matPane = new TilePane();
+		matPane.setPrefColumns(2);
+		//matPane.setPadding(new Insets(10,10,10,10));
+		sideBar.getChildren().add(matPane);
 		dirt = new Image("/res/dirt.jpg",50,50,false,false);
 		ImageView iv = new ImageView(dirt);
 		Button dirtButton = new Button("(1)",iv);
@@ -375,8 +406,7 @@ public class GrenadeJumperMapEditor extends Application {
 				changeMat(1.5D);
 			}
 		});
-		dirtButton.setLayoutX(10);
-		dirtButton.setLayoutY(10);
+		matPane.getChildren().add(dirtButton);
 		wood = new Image("/res/wood.jpg",50,50,false,false);
 		iv = new ImageView(wood);
 		Button woodButton = new Button("(2)",iv);
@@ -386,8 +416,7 @@ public class GrenadeJumperMapEditor extends Application {
 				changeMat(2.5D);
 			}
 		});
-		woodButton.setLayoutX(100);
-		woodButton.setLayoutY(10);
+		matPane.getChildren().add(woodButton);
 		brick = new Image("/res/brick.jpg",50,50,false,false);
 		iv = new ImageView(brick);
 		Button brickButton = new Button("(3)",iv);
@@ -397,8 +426,7 @@ public class GrenadeJumperMapEditor extends Application {
 				changeMat(3.5D);
 			}
 		});
-		brickButton.setLayoutX(10);
-		brickButton.setLayoutY(90);
+		matPane.getChildren().add(brickButton);
 		metal = new Image("/res/metal.jpg",50,50,false,false);
 		iv = new ImageView(metal);
 		Button metalButton = new Button("(0)",iv);
@@ -408,8 +436,7 @@ public class GrenadeJumperMapEditor extends Application {
 				changeMat(0D);
 			}
 		});
-		metalButton.setLayoutX(100);
-		metalButton.setLayoutY(90);
+		matPane.getChildren().add(metalButton);
 		iv = new ImageView(Goal.graphic);
 		Button goalButton = new Button("(G)",iv);
 		goalButton.setOnAction(new EventHandler<ActionEvent>(){
@@ -418,8 +445,7 @@ public class GrenadeJumperMapEditor extends Application {
 				newGoal();
 			}
 		});
-		goalButton.setLayoutX(10);
-		goalButton.setLayoutY(170);
+		matPane.getChildren().add(goalButton);
 		iv = new ImageView(engine.resp.img);
 		Button respButton = new Button("(P)",iv);
 		respButton.setOnAction(new EventHandler<ActionEvent>(){
@@ -429,10 +455,15 @@ public class GrenadeJumperMapEditor extends Application {
 				moving = true;
 			}
 		});
-		respButton.setLayoutX(110);
-		respButton.setLayoutY(170);
-		root.getChildren().addAll(dirtButton,woodButton,brickButton,metalButton,goalButton,respButton);
+		matPane.getChildren().add(respButton);
+		//pane.getChildren().addAll(dirtButton,woodButton,brickButton,metalButton,goalButton,respButton);
 		
+
+		GridPane pane = new GridPane();
+		//pane.setPadding(new Insets(10,10,10,10));
+		pane.setHgap(5);
+		pane.setVgap(5);
+		sideBar.getChildren().add(pane);
 		Button addPoly = new Button("Start (0-3)");
 		//addPoly.setDefaultButton(true);
 		addPoly.setOnAction(new EventHandler<ActionEvent>(){
@@ -441,8 +472,7 @@ public class GrenadeJumperMapEditor extends Application {
 				newPoly();
 			}
 		});
-		addPoly.setLayoutX(10);
-		addPoly.setLayoutY(260);
+		pane.add(addPoly, 0, 3);
 		Button endPoly = new Button("End (Enter)");
 		endPoly.setOnAction(new EventHandler<ActionEvent>(){
 			@Override
@@ -450,8 +480,7 @@ public class GrenadeJumperMapEditor extends Application {
 				endPoly();
 			}
 		});
-		endPoly.setLayoutX(80);
-		endPoly.setLayoutY(260);
+		pane.add(endPoly, 1, 3);
 		Button move = new Button("Move (M)");
 		move.setOnAction(new EventHandler<ActionEvent>(){
 			@Override
@@ -459,8 +488,7 @@ public class GrenadeJumperMapEditor extends Application {
 				moving = true;
 			}
 		});
-		move.setLayoutX(10);
-		move.setLayoutY(310);
+		pane.add(move, 0, 4);
 		Button delete = new Button("Delete (Del/Esc)");
 		delete.setCancelButton(true);
 		delete.setOnAction(new EventHandler<ActionEvent>(){
@@ -469,8 +497,11 @@ public class GrenadeJumperMapEditor extends Application {
 				delete();
 			}
 		});
-		delete.setLayoutX(80);
-		delete.setLayoutY(310);
+		pane.add(delete, 1, 4);
+		
+		VBox menu = new VBox();
+		menu.setSpacing(10);
+		sideBar.getChildren().add(menu);
 		Button play = new Button("Test Play (Ctrl+P)");
 		play.setOnAction(new EventHandler<ActionEvent>(){
 			@Override
@@ -478,10 +509,42 @@ public class GrenadeJumperMapEditor extends Application {
 				play();
 			}
 		});
-		play.setLayoutX(10);
-		play.setLayoutY(360);
-		root.getChildren().addAll(addPoly,endPoly,move,delete,play);
+		menu.getChildren().add(play);
+		Button open = new Button("Open (Ctrl+O)");
+		open.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent event) {
+				readMapData();
+			}
+		});
+		menu.getChildren().add(open);
+		Button save = new Button("Save (Ctrl+S)");
+		save.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent event) {
+				writeMapData();
+			}
+		});
+		menu.getChildren().add(save);
+		Label label = new Label("Preset Maps");
+		menu.getChildren().add(label);
 		
+		ChoiceBox<String> presetMaps = new ChoiceBox<String>();
+		presetMaps.getItems().addAll("res/metalLevel1","res/introToMat","res/myMap1.txt","res/myMap2.txt");
+		presetMaps.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>(){
+			@Override
+			public void changed(ObservableValue<? extends String> observable, String oldValue, String newValue) {
+				if(curMap != null)
+					writeMapData(curMap);
+				else if(!engine.lines.isEmpty()){
+					writeMapData();
+				}
+				engine.readMapData(newValue);			
+			}
+		});
+		menu.getChildren().add(presetMaps);
+		//pane.getChildren().addAll(addPoly,endPoly,move,delete,play);
+
 		canvas.setOnMouseClicked(clickHandler);
 		canvas.setOnMouseMoved(moveHandler);
 		scene.setOnKeyPressed(keyDownHandler);
