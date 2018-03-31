@@ -1,7 +1,6 @@
-import java.awt.FileDialog;
-import java.awt.Frame;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 
@@ -18,14 +17,11 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.control.Button;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.Label;
-import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
-import javafx.scene.layout.Border;
-import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.TilePane;
@@ -40,7 +36,7 @@ public class GrenadeJumperMapEditor extends Application {
 	private ArrayList<Double> newPoly = new ArrayList<Double>();
 	private String curMap;
 	private GameObject bg = new GameObject(new Image("/res/backtometal.png"), 0,0,engine.gc);
-	private Double curMaterial = 3D;
+	private Double curMaterial = 0D;
 	private GameObject g;
 	private int p = -1;
 	private GrenadeJumperJava gj;
@@ -73,13 +69,13 @@ public class GrenadeJumperMapEditor extends Application {
 			if(g != null)
 				engine.gc.drawImage(g.img,30,40);
 			else{
-				if(curMaterial>3)
+				if(curMaterial==3.5)
 					engine.gc.drawImage(brick,30,40);
-				else if(curMaterial>2)
+				else if(curMaterial==2.5)
 					engine.gc.drawImage(wood,30,40);
-				else if(curMaterial>1)
+				else if(curMaterial==1.5)
 					engine.gc.drawImage(dirt,30,40);
-				else
+				else if(curMaterial==0)
 					engine.gc.drawImage(metal,30,40);
 			}
 			engine.gc.save();
@@ -254,11 +250,11 @@ public class GrenadeJumperMapEditor extends Application {
 		public void handle(MouseEvent event) {
 			if(moving){
 				if(g != null){
-					g.x = event.getX() - engine.hWidth;
-					g.y = event.getY() - engine.hHeight;
+					g.x = event.getX() + engine.cam.x;
+					g.y = event.getY() + engine.cam.y;
 				}else if(p > -1){
-					double xvec = engine.lines.get(p)[0] - event.getX() + engine.hWidth;
-					double yvec = engine.lines.get(p)[1] - event.getY() + engine.hHeight;
+					double xvec = engine.lines.get(p)[0] - event.getX() - engine.cam.x;
+					double yvec = engine.lines.get(p)[1] - event.getY() - engine.cam.y;
 					for(int i=0; i < engine.lines.get(p).length -1; i+=2){
 						engine.lines.get(p)[i] -= xvec;
 						engine.lines.get(p)[i+1] -= yvec;
@@ -271,14 +267,19 @@ public class GrenadeJumperMapEditor extends Application {
 		//Create a frame for the file dialog box to get a path for the file
 		FileChooser fileC = new FileChooser();
 		fileC.setTitle("Save Map File");
-		fileC.setInitialDirectory(new File("C:/Users/Kylw/workspace"));
-		writeMapData(fileC.showSaveDialog(stage));
+		if(curMap != null){
+			File f = new File(curMap);
+			if(f.exists())
+				fileC.setInitialDirectory(f.getParentFile());
+		}
+		curMap = writeMapData(fileC.showSaveDialog(stage));
+		
 	}
 	
-	public void writeMapData(File file){
-		writeMapData(file.getAbsolutePath());
+	public String writeMapData(File file){
+		return writeMapData(file.getAbsolutePath());
 	}
-	public void writeMapData(String path){
+	public String writeMapData(String path){
 		if(engine.lines.size() > 0){//Check if customers have been stored
 			PrintWriter pWriter = null;
 			try{
@@ -300,20 +301,27 @@ public class GrenadeJumperMapEditor extends Application {
 					pWriter.println(s);
 				}
 				pWriter.close();
-				curMap = path;
+				return path;
 			}else{
 				System.out.println("Err: Could not open file: " + path);
 			}
 		}else{
 			System.out.println("Alert: Please store some customers before attempting to write them");
 		}
+		return null;
 	}
 	
 	public void readMapData(){
 		FileChooser fileC = new FileChooser();
 		fileC.setTitle("Open Map File");
-		fileC.setInitialDirectory(new File("C:/Users/Kylw/workspace"));
+		if(curMap != null){
+			File f = new File(curMap);
+			if(f.exists())
+				fileC.setInitialDirectory(f.getParentFile());
+		}
 		curMap = engine.readExternalMapData(fileC.showOpenDialog(stage));
+		p = -1;
+		g = null;
 		//stage.requestFocus();
 	}
 	public void endPoly(){
@@ -361,12 +369,18 @@ public class GrenadeJumperMapEditor extends Application {
 		drawing = false;
 	}
 	public void play(){
-		if(curMap == null)
-			writeMapData();
-		else
-			writeMapData(curMap);
+		File temp = null;
+		try {
+			temp = File.createTempFile("temp-map", ".tmp");
+			temp.deleteOnExit();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} 
+		writeMapData(temp);
+		
 		gj = new GrenadeJumperJava();
-		gj.setDevMap(curMap);
+		gj.setDevMap(temp.getAbsolutePath());
 		Pane root = new Pane();
 		Scene scene=new Scene(root,1280,720);
 		

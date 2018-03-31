@@ -13,7 +13,6 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
-import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
@@ -35,9 +34,9 @@ public class GrenadeJumperJava extends Application {
 	private int mapI = 0;
 	private boolean camLock = false;
 
-	public static void main(String[] args) {
+	/*public static void main(String[] args) {
 		launch(args);
-	}
+	}*/
 	void setDevMap(String map){
 		devMap = map;
 	}
