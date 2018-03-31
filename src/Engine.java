@@ -32,7 +32,10 @@ public class Engine {
 	double hHeight;
 	GameObject cam = new GameObject(0,0);
 	GameObject resp;
-	//GameObject[] bgs = new GameObject[maps.length];
+	Image[] backImg = new Image[]{null,new Image("/res/metalStatic.png")};
+	Image[] pBackImg = new Image[]{null,new Image("/res/metalParral.png")};
+	GameObject staticBack;
+	GameObject paralaxBack;
 	public Engine() {
 	}
 
@@ -46,7 +49,16 @@ public class Engine {
 		gc.fillRect(0,0,hWidth*2,hHeight*2);
 		gc.setFill(Color.BLACK);
 		gc.save();
+		gc.translate(-cam.x/4, -cam.y/4);
+		if(paralaxBack.img != null){
+			paralaxBack.update();
+		}
+		gc.restore();
+		gc.save();
 		gc.translate(-cam.x, -cam.y);
+		if(staticBack.img != null){
+			staticBack.update();
+		}
 		for(GameObject obj : list)
 			obj.update();
 		for(GameObject obj : delList)
@@ -98,10 +110,13 @@ public class Engine {
 					lineScanner.useDelimiter(",");
 					resp.x = lineScanner.nextDouble();
 					resp.y = lineScanner.nextDouble();
-					//if(bgs[mapI] != null){
-					//bgs[mapI].x = lineScanner.nextDouble();
-					//bgs[mapI].y = lineScanner.nextDouble();
-					//}
+					staticBack.x = lineScanner.nextDouble();
+					staticBack.y = lineScanner.nextDouble();
+					paralaxBack.x = lineScanner.nextDouble();
+					paralaxBack.y = lineScanner.nextDouble();
+					int i = lineScanner.nextInt();
+					staticBack.img = backImg[i];
+					paralaxBack.img = pBackImg[i];
 					lineScanner.close();
 				}
 				boolean poly = false;
@@ -156,10 +171,13 @@ public class Engine {
 				lineScanner.useDelimiter(",");
 				resp.x = lineScanner.nextDouble();
 				resp.y = lineScanner.nextDouble();
-				//if(bgs[mapI] != null){
-				//bgs[mapI].x = lineScanner.nextDouble();
-				//bgs[mapI].y = lineScanner.nextDouble();
-				//}
+				staticBack.x = lineScanner.nextDouble();
+				staticBack.y = lineScanner.nextDouble();
+				paralaxBack.x = lineScanner.nextDouble();
+				paralaxBack.y = lineScanner.nextDouble();
+				int i = lineScanner.nextInt();
+				staticBack.img = backImg[i];
+				paralaxBack.img = pBackImg[i];
 				lineScanner.close();
 			}
 			boolean poly = false;
@@ -202,6 +220,8 @@ public class Engine {
 		Goal.graphic = new Image("/res/goal.png");
 		new Grenade(0,0,this);
 		resp = new Respawn(0,0,gc);
+		staticBack = new GameObject(null,0,0,gc);
+		paralaxBack = new GameObject(null,0,0,gc);
 		moveCam(resp.x, resp.y);
 	}
 	void keyDown(KeyCode code) {

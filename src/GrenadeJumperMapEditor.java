@@ -35,8 +35,10 @@ public class GrenadeJumperMapEditor extends Application {
 	private boolean ctrl = false;
 	private ArrayList<Double> newPoly = new ArrayList<Double>();
 	private String curMap;
-	private GameObject bg = new GameObject(new Image("/res/backtometal.png"), 0,0,engine.gc);
+	private boolean backMoving = false;
+	private boolean parMoving = false;
 	private Double curMaterial = 0D;
+	private int curBack = 0;
 	private GameObject g;
 	private int p = -1;
 	private GrenadeJumperJava gj;
@@ -55,14 +57,27 @@ public class GrenadeJumperMapEditor extends Application {
 	private AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
+			double difx = 0;
+			double dify = 0;
 			if(engine.a)
-				 engine.cam.x -= 10;
+				 difx -= 10;
 			if(engine.d)
-				 engine.cam.x += 10;
+				difx += 10;
 			if(engine.w)
-				 engine.cam.y -= 10;
+				dify -= 10;
 			if(engine.s)
-				 engine.cam.y += 10;
+				dify += 10;
+			
+			if(backMoving){
+				engine.staticBack.x += difx;
+				engine.staticBack.y += dify;
+			}else if(parMoving){
+				engine.paralaxBack.x += difx;
+				engine.paralaxBack.y += dify;
+			}else{
+				engine.cam.x += difx;
+				engine.cam.y += dify;
+			}
 			
 			engine.update();
 			engine.gc.strokeText("Current: " + curMap, 30, 10);
@@ -154,12 +169,6 @@ public class GrenadeJumperMapEditor extends Application {
 						if(p > -1)
 							curMaterial = engine.polyMat.get(p);
 					}
-					if(g == null && p == -1){
-						if(curMaterial == -3){
-							bg.x = mx;
-							bg.y = my;
-						}
-					}
 				}
 			}else if(mouseEvent.getButton() == MouseButton.SECONDARY){
 				moving = false;
@@ -210,7 +219,14 @@ public class GrenadeJumperMapEditor extends Application {
 				ctrl = false;
 				break;
 			case B:
-				curMaterial = -3D;
+				if(ctrl){
+					parMoving = !parMoving;
+					backMoving = false;
+				}else{
+					backMoving = !backMoving;
+					parMoving = false;
+				}
+				ctrl = false;
 				break;
 				//case 1 2 and 3 for material
 			case CONTROL:
@@ -288,7 +304,7 @@ public class GrenadeJumperMapEditor extends Application {
 				System.out.println("Err: FileNotFoundException");
 			}
 			if(pWriter != null){
-				pWriter.println(engine.resp.x + "," + engine.resp.y +","+bg.x+","+bg.y);
+				pWriter.println(engine.resp.x + "," + engine.resp.y +","+engine.staticBack.x+","+engine.staticBack.y+","+engine.paralaxBack.x+","+engine.paralaxBack.y+","+curBack);
 				for(GameObject g : engine.list)
 					pWriter.println(g.x + "," + g.y);
 				pWriter.println("/");
@@ -540,9 +556,39 @@ public class GrenadeJumperMapEditor extends Application {
 			}
 		});
 		menu.getChildren().add(save);
-		Label label = new Label("Preset Maps");
+		Label label = new Label("Backgrounds");
 		menu.getChildren().add(label);
-		
+		ChoiceBox<String> backs = new ChoiceBox<String>();
+		backs.getItems().addAll("None","/res/backtometal.png");
+		backs.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>(){
+			@Override
+			public void changed(ObservableValue<? extends Number> observable, Number oldValue, Number newValue) {
+				engine.staticBack.img = engine.backImg[(int) newValue];
+				engine.paralaxBack.img = engine.pBackImg[(int) newValue];
+				curBack = (int) newValue;
+			}
+		});
+		menu.getChildren().add(backs);
+		Button backMove = new Button("Move Background (B)");
+		backMove.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent event) {
+				backMoving = !backMoving;
+				parMoving = false;
+			}
+		});
+		menu.getChildren().add(backMove);
+		Button parMove = new Button("Move Paralax (Ctrl+B)");
+		parMove.setOnAction(new EventHandler<ActionEvent>(){
+			@Override
+			public void handle(ActionEvent event) {
+				parMoving = !parMoving;
+				backMoving = false;
+			}
+		});
+		menu.getChildren().add(parMove);
+		Label label2 = new Label("Preset Maps");
+		menu.getChildren().add(label2);
 		ChoiceBox<String> presetMaps = new ChoiceBox<String>();
 		presetMaps.getItems().addAll("res/metalLevel1","res/introToMat","res/myMap1.txt","res/myMap2.txt");
 		presetMaps.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<String>(){
