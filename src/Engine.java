@@ -34,6 +34,8 @@ public class Engine {
 	GameObject resp;
 	//GameObject[] bgs = new GameObject[maps.length];
 	public Engine() {
+
+		Goal.graphic = new Image("/res/goal.png");
 	}
 
 	public void moveCam(double x, double y){

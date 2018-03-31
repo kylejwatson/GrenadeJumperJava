@@ -19,8 +19,13 @@ public class Grenade extends PhysicsObject {
 	private float timer = 0f;
 	private float gfxTimer = 0f;
 	private Clip expl;
+	private static Image graphic; 
 	public Grenade(double x, double y, Engine engine) {
-		super(new Image("/res/gren.png"),x,y, engine);
+		super(graphic,x,y, engine);
+		if(graphic == null){
+			graphic = new Image("/res/gren.png");
+			img = graphic;
+		}
 		try {
 			expl = AudioSystem.getClip();
 			URL url = Grenade.class.getResource("/res/expl.wav");
