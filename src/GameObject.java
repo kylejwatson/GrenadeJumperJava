@@ -7,6 +7,9 @@ public class GameObject {
 	protected double x,y;
 	protected double radius;
 	protected GraphicsContext gc;
+	protected Image[] anim;
+	protected int animCounter = 0;
+	protected double offsety;
 
 	public GameObject(Image img, double x, double y, GraphicsContext gc) {
 		this.x = x;
@@ -26,7 +29,14 @@ public class GameObject {
 	}
 	
 	public void update(){
-		gc.drawImage(img, x-img.getWidth()/2, y-img.getHeight()/2);
+		if(anim == null)
+			gc.drawImage(img, x-img.getWidth()/2, y-(img.getHeight()/2)-offsety);
+		else{
+			gc.drawImage(anim[animCounter/2], x-img.getWidth()/2, y-(img.getHeight()/2)-offsety);
+			animCounter ++;
+			if(animCounter/2 == anim.length)
+				animCounter = 0;
+		}
 	}
 
 }

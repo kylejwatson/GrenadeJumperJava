@@ -13,8 +13,8 @@ import javafx.scene.paint.Color;
 
 public class Grenade extends PhysicsObject {
 	private static final float DETONATE_TIME = 1F;
-	private static final float BLAST_RADIUS = 90F;
-	private static final double EXPLOSION_FORCE = 10F;
+	private static final float BLAST_RADIUS = 200F;
+	private static final double EXPLOSION_FORCE = 100F;
 	private static final float GRAPHICS_DELAY = 0.1F;
 	private float timer = 0f;
 	private float gfxTimer = 0f;
@@ -90,8 +90,8 @@ public class Grenade extends PhysicsObject {
 						if(length<BLAST_RADIUS){
 							distx /= length;
 							disty /= length;
-							poly[i] += distx*EXPLOSION_FORCE*10/material;
-							poly[i+1] += disty*EXPLOSION_FORCE*10/material;
+							poly[i] += distx*EXPLOSION_FORCE/material;
+							poly[i+1] += disty*EXPLOSION_FORCE/material;
 							//movedVert[i/2] = true;
 							System.out.println(i);
 							System.out.println(i/2);
@@ -123,8 +123,8 @@ public class Grenade extends PhysicsObject {
 										double len = Math.sqrt(vecx*vecx+vecy*vecy);
 										vecx /= len;
 										vecy /= len;
-										point[0] += vecx*EXPLOSION_FORCE*10/material;
-										point[1] += vecy*EXPLOSION_FORCE*10/material;
+										point[0] += vecx*EXPLOSION_FORCE/material;
+										point[1] += vecy*EXPLOSION_FORCE/material;
 										newPoly.add(point[0]);
 										newPoly.add(point[1]);
 										

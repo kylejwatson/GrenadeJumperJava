@@ -18,11 +18,37 @@ public class Player extends PhysicsObject {
 	private double mx = 0;
 	private double my = 0;
 	private Clip clip;
-	private static final float SPEED = 3;
+	private static final float SPEED = 5;
 	private static final float JUMP = 5;
-	private static final double MAX_SPEED = 4;
+	private static final double MAX_SPEED = 10;
+	private Image[] runAnim;
+	private Image[] crouchAnim;
+	private Image[] activeAnim;
+	private boolean left = false;
 	public Player(double x, double y, Engine engine) {
-		super(new Image("/res/char.png"),x,y,engine);
+		super(new Image("/res/char-anim/char_animtion0_0.png"),x,y,engine);
+		runAnim = new Image[]{new Image("/res/char-anim/char_animtion0_0.png"),
+				new Image("/res/char-anim/char_animtion0_1.png"),
+				new Image("/res/char-anim/char_animtion0_2.png"),
+				new Image("/res/char-anim/char_animtion0_3.png"),
+				new Image("/res/char-anim/char_animtion0_4.png"),
+				new Image("/res/char-anim/char_animtion0_5.png"),
+				new Image("/res/char-anim/char_animtion0_6.png"),
+				new Image("/res/char-anim/char_animtion0_7.png"),
+				new Image("/res/char-anim/char_animtion0_8.png")};
+		crouchAnim = new Image[]{new Image("/res/char-anim/char_crouchwalk_0.png"),
+				new Image("/res/char-anim/char_crouchwalk_1.png"),
+				new Image("/res/char-anim/char_crouchwalk_2.png"),
+				new Image("/res/char-anim/char_crouchwalk_3.png"),
+				new Image("/res/char-anim/char_crouchwalk_4.png"),
+				new Image("/res/char-anim/char_crouchwalk_5.png"),
+				new Image("/res/char-anim/char_crouchwalk_6.png"),
+				new Image("/res/char-anim/char_crouchwalk_7.png"),
+				new Image("/res/char-anim/char_crouchwalk_8.png"),
+				};
+		activeAnim = runAnim;
+		radius /=2;
+		offsety = -radius*2;
 		try {
 			clip = AudioSystem.getClip();
 			URL url = Grenade.class.getResource("/res/walk.wav");
@@ -45,13 +71,49 @@ public class Player extends PhysicsObject {
 		px = x+vecx*50;
 		py = y+vecy*50;
 		gc.strokeLine(x, y, px, py);
-		super.update();
+		if(left){
+			gc.save();
+			gc.translate(x, 0);
+			gc.scale(-1,1);
+			gc.translate(-x, 0);
+			super.update();
+			gc.restore();
+		}else
+			super.update();
+		y -= radius*2;
+		boolean crouch = false;
+		for(double[] poly : engine.lines){
+			for(int i=0; i < poly.length -1; i+=2){
+				int i2 = i+2; 
+				if(i2 == poly.length)
+					i2 = 0;
+				double[] line = new double[]{poly[i],poly[i+1],poly[i2],poly[i2+1]}; 
+				double[] point = detectCircle(line);
+				
+				if(point != null){
+					crouch = true;
+				}
+			}
+		}
+		if(crouch){
+			//gc.strokeOval(x-radius, y-radius, radius*2, radius*2);
+			activeAnim = crouchAnim;
+			img = crouchAnim[0];
+			offsety = radius-10;
+		}else{
+			activeAnim = runAnim;
+			img = runAnim[0];
+			offsety = radius-20;
+		}
+		y += radius*2;
+		gc.strokeOval(x-radius, y-radius, radius*2, radius*2);
 	}
 
 	public void keyInput(){
 		radius /= 2;
 		boolean totalMovable = false;
 		if(engine.a){
+			left = true;
 			boolean moveable = true;
 			x-=radius+5;
 			loop1:
@@ -79,6 +141,7 @@ public class Player extends PhysicsObject {
 			}
 		}
 		if(engine.d){
+			left = false;
 			boolean moveable = true;
 			x+=radius+5;
 			loop1:
@@ -126,17 +189,20 @@ public class Player extends PhysicsObject {
 			}
 		radius/=1.2;
 		y-=radius+1;
-		if(engine.w && canJump){		
+		if(engine.w && canJump){	
 			vely -= JUMP;
 			if(!clip.isRunning()){
 				clip.setFramePosition(0);
 				clip.start();
-			} 
+			}
 		}
 		
 		radius *= 2;
 		if((engine.a || engine.d) && canJump && totalMovable){
-			//
+			anim = activeAnim;
+		}else{
+			anim = null;
+			animCounter = 0;
 		}
 	}
 
