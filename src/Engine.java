@@ -41,7 +41,7 @@ public class Engine {
 
 	public void moveCam(double x, double y){
 		cam.x = x-hWidth;
-		cam.y = y-hHeight;
+		cam.y = y-hHeight;//*1.5;
 	}
 
 	public void update() {

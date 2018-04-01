@@ -18,11 +18,12 @@ public class Player extends PhysicsObject {
 	private double mx = 0;
 	private double my = 0;
 	private Clip clip;
-	private static final float SPEED = 5;
+	private static final float SPEED = 4;
 	private static final float JUMP = 5;
-	private static final double MAX_SPEED = 10;
+	private static final double MAX_SPEED = 8;
 	private Image[] runAnim;
 	private Image[] crouchAnim;
+	private Image[] jumpAnim;
 	private Image[] activeAnim;
 	private boolean left = false;
 	public Player(double x, double y, Engine engine) {
@@ -45,6 +46,16 @@ public class Player extends PhysicsObject {
 				new Image("/res/char-anim/char_crouchwalk_6.png"),
 				new Image("/res/char-anim/char_crouchwalk_7.png"),
 				new Image("/res/char-anim/char_crouchwalk_8.png"),
+				};
+		jumpAnim = new Image[]{new Image("/res/char-anim/char_jump_0.png"),
+				new Image("/res/char-anim/char_jump_1.png"),
+				new Image("/res/char-anim/char_jump_2.png"),
+				new Image("/res/char-anim/char_jump_3.png"),
+				new Image("/res/char-anim/char_jump_4.png"),
+				new Image("/res/char-anim/char_jump_5.png"),
+				new Image("/res/char-anim/char_jump_6.png"),
+				new Image("/res/char-anim/char_jump_7.png"),
+				new Image("/res/char-anim/char_jump_8.png"),
 				};
 		activeAnim = runAnim;
 		radius /=2;
@@ -70,7 +81,8 @@ public class Player extends PhysicsObject {
 		vecy = -vecy;
 		px = x+vecx*50;
 		py = y+vecy*50;
-		gc.strokeLine(x, y, px, py);
+		//gc.strokeLine(x, y, px, py);
+		
 		if(left){
 			gc.save();
 			gc.translate(x, 0);
@@ -80,6 +92,7 @@ public class Player extends PhysicsObject {
 			gc.restore();
 		}else
 			super.update();
+		
 		y -= radius*2;
 		boolean crouch = false;
 		for(double[] poly : engine.lines){
@@ -106,7 +119,7 @@ public class Player extends PhysicsObject {
 			offsety = radius-20;
 		}
 		y += radius*2;
-		gc.strokeOval(x-radius, y-radius, radius*2, radius*2);
+		//gc.strokeOval(x-radius, y-radius, radius*2, radius*2);
 	}
 
 	public void keyInput(){
@@ -190,6 +203,7 @@ public class Player extends PhysicsObject {
 		radius/=1.2;
 		y-=radius+1;
 		if(engine.w && canJump){	
+			anim = jumpAnim;
 			vely -= JUMP;
 			if(!clip.isRunning()){
 				clip.setFramePosition(0);
@@ -198,9 +212,14 @@ public class Player extends PhysicsObject {
 		}
 		
 		radius *= 2;
-		if((engine.a || engine.d) && canJump && totalMovable){
+		if((engine.a || engine.d) && totalMovable && anim != jumpAnim){
 			anim = activeAnim;
-		}else{
+		}
+		if(anim == jumpAnim && animCounter/2 == anim.length-1){
+			anim = null;
+			animCounter = 0;
+		}
+		if(!engine.a && !engine.d && anim != jumpAnim){
 			anim = null;
 			animCounter = 0;
 		}
