@@ -20,46 +20,32 @@ public class Player extends PhysicsObject {
 	private Clip clip;
 	private static final float SPEED = 4;
 	private static final float JUMP = 5;
-	private static final double MAX_SPEED = 8;
+	private static final double MAX_SPEED = 5;
 	private Image[] runAnim;
-	private Image[] crouchAnim;
-	private Image[] jumpAnim;
+	private Image[] throwAnim;
+	private Image jumpImage;
 	private Image[] activeAnim;
 	private boolean left = false;
 	public Player(double x, double y, Engine engine) {
-		super(new Image("/res/char-anim/char_animtion0_0.png"),x,y,engine);
-		runAnim = new Image[]{new Image("/res/char-anim/char_animtion0_0.png"),
-				new Image("/res/char-anim/char_animtion0_1.png"),
-				new Image("/res/char-anim/char_animtion0_2.png"),
-				new Image("/res/char-anim/char_animtion0_3.png"),
-				new Image("/res/char-anim/char_animtion0_4.png"),
-				new Image("/res/char-anim/char_animtion0_5.png"),
-				new Image("/res/char-anim/char_animtion0_6.png"),
-				new Image("/res/char-anim/char_animtion0_7.png"),
-				new Image("/res/char-anim/char_animtion0_8.png")};
-		crouchAnim = new Image[]{new Image("/res/char-anim/char_crouchwalk_0.png"),
-				new Image("/res/char-anim/char_crouchwalk_1.png"),
-				new Image("/res/char-anim/char_crouchwalk_2.png"),
-				new Image("/res/char-anim/char_crouchwalk_3.png"),
-				new Image("/res/char-anim/char_crouchwalk_4.png"),
-				new Image("/res/char-anim/char_crouchwalk_5.png"),
-				new Image("/res/char-anim/char_crouchwalk_6.png"),
-				new Image("/res/char-anim/char_crouchwalk_7.png"),
-				new Image("/res/char-anim/char_crouchwalk_8.png"),
-				};
-		jumpAnim = new Image[]{new Image("/res/char-anim/char_jump_0.png"),
-				new Image("/res/char-anim/char_jump_1.png"),
-				new Image("/res/char-anim/char_jump_2.png"),
-				new Image("/res/char-anim/char_jump_3.png"),
-				new Image("/res/char-anim/char_jump_4.png"),
-				new Image("/res/char-anim/char_jump_5.png"),
-				new Image("/res/char-anim/char_jump_6.png"),
-				new Image("/res/char-anim/char_jump_7.png"),
-				new Image("/res/char-anim/char_jump_8.png"),
-				};
+		super(new Image("/res/char-anim/char0.png",50,50,true,false),x,y,engine);
+		runAnim = new Image[]{new Image("/res/char-anim/char0.png",50,50,true,false),
+				new Image("/res/char-anim/char1.png",50,50,true,false),
+				new Image("/res/char-anim/char2.png",50,50,true,false),
+				new Image("/res/char-anim/char3.png",50,50,true,false),
+				new Image("/res/char-anim/char4.png",50,50,true,false),
+				new Image("/res/char-anim/char5.png",50,50,true,false),
+				new Image("/res/char-anim/char6.png",50,50,true,false),
+				new Image("/res/char-anim/char7.png",50,50,true,false),
+				new Image("/res/char-anim/char8.png",50,50,true,false)};
+		throwAnim = new Image[]{new Image("/res/char-anim/charthrow0.png",50,50,true,false),
+				new Image("/res/char-anim/charthrow1.png",50,50,true,false),
+				new Image("/res/char-anim/charthrow2.png",50,50,true,false),
+				new Image("/res/char-anim/charthrow2.png",50,50,true,false)};
+		
+		jumpImage = new Image("/res/char-anim/charjump.png",50,50,true,false);
 		activeAnim = runAnim;
-		radius /=2;
-		offsety = -radius*2;
+		//radius /=2;
+		//offsety = -radius*2;
 		try {
 			clip = AudioSystem.getClip();
 			URL url = Grenade.class.getResource("/res/walk.wav");
@@ -93,7 +79,7 @@ public class Player extends PhysicsObject {
 		}else
 			super.update();
 		
-		y -= radius*2;
+		/*y -= radius*2;
 		boolean crouch = false;
 		for(double[] poly : engine.lines){
 			for(int i=0; i < poly.length -1; i+=2){
@@ -119,7 +105,7 @@ public class Player extends PhysicsObject {
 			offsety = radius-20;
 		}
 		y += radius*2;
-		//gc.strokeOval(x-radius, y-radius, radius*2, radius*2);
+		//gc.strokeOval(x-radius, y-radius, radius*2, radius*2);*/
 	}
 
 	public void keyInput(){
@@ -202,8 +188,12 @@ public class Player extends PhysicsObject {
 			}
 		radius/=1.2;
 		y-=radius+1;
+		if(!canJump)
+			img = jumpImage;
+		else
+			img = runAnim[0];
 		if(engine.w && canJump){	
-			anim = jumpAnim;
+			//anim = jumpAnim;
 			vely -= JUMP;
 			if(!clip.isRunning()){
 				clip.setFramePosition(0);
@@ -212,17 +202,23 @@ public class Player extends PhysicsObject {
 		}
 		
 		radius *= 2;
-		if((engine.a || engine.d) && totalMovable && anim != jumpAnim){
-			anim = activeAnim;
+		if(anim != throwAnim){
+			if((engine.a || engine.d) && totalMovable && canJump){
+				if(anim != activeAnim){
+					animCounter = 0;
+					anim = activeAnim;
+				}
+			}else 
+				anim = null;
 		}
-		if(anim == jumpAnim && animCounter/2 == anim.length-1){
+		if(anim == throwAnim && animCounter/animSpeed == anim.length-1){
 			anim = null;
 			animCounter = 0;
 		}
-		if(!engine.a && !engine.d && anim != jumpAnim){
+		/*if(!engine.a && !engine.d && anim != jumpAnim){
 			anim = null;
 			animCounter = 0;
-		}
+		}*/
 	}
 
 
@@ -232,8 +228,10 @@ public class Player extends PhysicsObject {
 	}
 
 	public void throwNade(double x, double y){
-		double vecx = x;
-		double vecy = y;
+		animCounter = 0;
+		anim = throwAnim;
+		double vecx = engine.hWidth - x;
+		double vecy = engine.hHeight -y;
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
 		vecx = vecx/dist;
 		vecy = vecy/dist;
@@ -245,17 +243,9 @@ public class Player extends PhysicsObject {
 	}
 	
 	public void mouseDown(MouseEvent me){
-		double vecx = engine.hWidth - me.getX();
-		double vecy = engine.hHeight - me.getY();
-		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
-		vecx = vecx/dist;
-		vecy = vecy/dist;
-		vecx = -vecx;
-		vecy = -vecy;
-		Grenade g = new Grenade(x,y,engine);
+		
 		if(me.getButton() == MouseButton.PRIMARY){
-			g.addVelocity(vecx*10, vecy*10);
-			engine.list.add(g);
+			throwNade(me.getX(),me.getY());
 		}
 	}
 

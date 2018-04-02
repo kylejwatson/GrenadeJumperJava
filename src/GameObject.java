@@ -10,6 +10,7 @@ public class GameObject {
 	protected Image[] anim;
 	protected int animCounter = 0;
 	protected double offsety;
+	protected int animSpeed = 2;
 
 	public GameObject(Image img, double x, double y, GraphicsContext gc) {
 		this.x = x;
@@ -32,9 +33,9 @@ public class GameObject {
 		if(anim == null)
 			gc.drawImage(img, x-img.getWidth()/2, y-(img.getHeight()/2)-offsety);
 		else{
-			gc.drawImage(anim[animCounter/2], x-img.getWidth()/2, y-(img.getHeight()/2)-offsety);
+			gc.drawImage(anim[animCounter/animSpeed], x-img.getWidth()/2, y-(img.getHeight()/2)-offsety);
 			animCounter ++;
-			if(animCounter/2 == anim.length)
+			if(animCounter/animSpeed == anim.length)
 				animCounter = 0;
 		}
 	}
