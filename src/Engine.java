@@ -13,6 +13,7 @@ import javafx.scene.image.Image;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.scene.paint.ImagePattern;
+import javafx.scene.shape.SVGPath;
 
 public class Engine {
 	GraphicsContext gc;
@@ -24,10 +25,15 @@ public class Engine {
 	ArrayList<GameObject> list = new ArrayList<GameObject>();
 	ArrayList<Double> polyMat = new ArrayList<Double>();
 	ArrayList<GameObject> delList = new ArrayList<GameObject>();
-	private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.jpg"),0,0,200,200,false);
-	private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
-	private ImagePattern wood = new ImagePattern(new Image("/res/wood.jpg"),0,0,100,100,false);
-	private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
+	private Color dirt = Color.web("0x947f7b");
+	//private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.jpg"),0,0,200,200,false);
+	//private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
+	private Color brick = Color.web("0xffd943");
+	//private ImagePattern wood = new ImagePattern(new Image("/res/wood.jpg"),0,0,100,100,false);
+	//private ImagePattern metal = new ImagePattern(new Image("/res/metal.jpg"),0,0,100,100,false);
+	private Color metal = Color.web("0x584682");
+	private Color wood = Color.web("0xdc4d53");
+	private Color shade = Color.web("0x000000",0.3);
 	double hWidth;
 	double hHeight;
 	GameObject cam = new GameObject(0,0);
@@ -65,26 +71,53 @@ public class Engine {
 			list.remove(obj);
 		delList.clear();
 		int polyCount = 0;
+		String[] content = new String[lines.size()];
 		for(int k=0; k<lines.size(); k++){
 			double[] poly = lines.get(k);
 			polyCount += poly.length/2;
-			gc.beginPath();
-			gc.moveTo(poly[0], poly[1]);
+			//SVGPath svg = new SVGPath();
+			content[k] = "M"+poly[0]+" " + poly[1];
+			//svg.setContent("M"+poly[0]+"," + poly[1]);
+			
+			//gc.beginPath();
+			//gc.moveTo(poly[0]+10, poly[1]+10);
 			for(int i=2; i < poly.length -1; i+=2){
 				int i2 = i+1;
-				gc.lineTo(poly[i], poly[i2]);
+				//gc.lineTo(poly[i]+10, poly[i2]+10);
+				content[k] += " L " + poly[i] + " " + poly[i2];
 			}
+			content[k] += " Z";
+			//gc.closePath();
+			//svg.setContent(content)
+			content[k] += polyMat.get(k);
+		}
+		gc.save();
+		gc.translate(10, 10);
+		for(String s: content){
+			s = s.substring(0, s.length()-3);
+			gc.beginPath();
+			gc.appendSVGPath(s);
 			gc.closePath();
-			if(polyMat.get(k)>3)
+			gc.setFill(Color.BLACK);
+			gc.setGlobalAlpha(0.2);
+			gc.fill();
+		}
+		gc.restore();
+		for(String s: content){
+			double c = Double.valueOf(s.substring(s.length()-3));
+			if(c>3)
 				gc.setFill(brick);
-			else if(polyMat.get(k)>2)
+			else if(c>2)
 				gc.setFill(wood);
-			else if(polyMat.get(k)>1)
+			else if(c>1)
 				gc.setFill(dirt);
 			else
 				gc.setFill(metal);
+			s = s.substring(0, s.length()-3);
+			gc.beginPath();
+			gc.appendSVGPath(s);
+			gc.closePath();
 			gc.fill();
-			gc.setFill(Color.BLACK);
 		}
 		gc.restore();
 		gc.strokeText("Edge Count: " + polyCount, 30, 30);
@@ -110,13 +143,13 @@ public class Engine {
 					lineScanner.useDelimiter(",");
 					resp.x = lineScanner.nextDouble();
 					resp.y = lineScanner.nextDouble();
-					staticBack.x = lineScanner.nextDouble();
-					staticBack.y = lineScanner.nextDouble();
-					paralaxBack.x = lineScanner.nextDouble();
-					paralaxBack.y = lineScanner.nextDouble();
-					int i = lineScanner.nextInt();
-					staticBack.img = backImg[i];
-					paralaxBack.img = pBackImg[i];
+					//staticBack.x = lineScanner.nextDouble();
+					//staticBack.y = lineScanner.nextDouble();
+					//paralaxBack.x = lineScanner.nextDouble();
+					//paralaxBack.y = lineScanner.nextDouble();
+					//int i = lineScanner.nextInt();
+					//staticBack.img = backImg[i];
+					//paralaxBack.img = pBackImg[i];
 					lineScanner.close();
 				}
 				boolean poly = false;

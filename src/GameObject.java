@@ -24,9 +24,12 @@ public class GameObject {
 		this.x = x;
 		this.y = y;
 	}
-	
+
 	public double getDistance(GameObject go){
 		return Math.sqrt(Math.pow(x-go.x,2d)+Math.pow(y-go.y,2d));
+	}
+	public double getDistance(double[] point){
+		return Math.sqrt(Math.pow(x-point[0],2d)+Math.pow(y-point[1],2d));
 	}
 	
 	public void update(){

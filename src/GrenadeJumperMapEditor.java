@@ -49,7 +49,7 @@ public class GrenadeJumperMapEditor extends Application {
 	private Image brick;
 	private Image metal;
 	private Stage stage;
-	
+
 
 	public static void main(String[] args) {
 		launch(args);
@@ -60,14 +60,14 @@ public class GrenadeJumperMapEditor extends Application {
 			double difx = 0;
 			double dify = 0;
 			if(engine.a)
-				 difx -= 10;
+				difx -= 10;
 			if(engine.d)
 				difx += 10;
 			if(engine.w)
 				dify -= 10;
 			if(engine.s)
 				dify += 10;
-			
+
 			if(backMoving){
 				engine.staticBack.x += difx;
 				engine.staticBack.y += dify;
@@ -78,7 +78,7 @@ public class GrenadeJumperMapEditor extends Application {
 				engine.cam.x += difx;
 				engine.cam.y += dify;
 			}
-			
+
 			engine.update();
 			engine.gc.strokeText("Current: " + curMap, 30, 10);
 			if(g != null)
@@ -289,11 +289,12 @@ public class GrenadeJumperMapEditor extends Application {
 				fileC.setInitialDirectory(f.getParentFile());
 		}
 		curMap = writeMapData(fileC.showSaveDialog(stage));
-		
 	}
-	
+
 	public String writeMapData(File file){
-		return writeMapData(file.getAbsolutePath());
+		if(file != null)
+			return writeMapData(file.getAbsolutePath());
+		return null;
 	}
 	public String writeMapData(String path){
 		if(engine.lines.size() > 0){//Check if customers have been stored
@@ -326,7 +327,7 @@ public class GrenadeJumperMapEditor extends Application {
 		}
 		return null;
 	}
-	
+
 	public void readMapData(){
 		FileChooser fileC = new FileChooser();
 		fileC.setTitle("Open Map File");
@@ -355,6 +356,7 @@ public class GrenadeJumperMapEditor extends Application {
 	public void delete(){
 		if(p > -1){
 			engine.lines.remove(p);
+			engine.polyMat.remove(p);
 			p = -1;
 		}else if(g != null){
 			engine.list.remove(g);
@@ -390,16 +392,15 @@ public class GrenadeJumperMapEditor extends Application {
 			temp = File.createTempFile("temp-map", ".tmp");
 			temp.deleteOnExit();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} 
 		writeMapData(temp);
-		
+
 		gj = new GrenadeJumperJava();
 		gj.setDevMap(temp.getAbsolutePath());
 		Pane root = new Pane();
 		Scene scene=new Scene(root,1280,720);
-		
+
 		Stage stage = new Stage();
 		stage.setScene(scene);
 		try {
@@ -487,7 +488,7 @@ public class GrenadeJumperMapEditor extends Application {
 		});
 		matPane.getChildren().add(respButton);
 		//pane.getChildren().addAll(dirtButton,woodButton,brickButton,metalButton,goalButton,respButton);
-		
+
 
 		GridPane pane = new GridPane();
 		//pane.setPadding(new Insets(10,10,10,10));
@@ -528,7 +529,7 @@ public class GrenadeJumperMapEditor extends Application {
 			}
 		});
 		pane.add(delete, 1, 4);
-		
+
 		VBox menu = new VBox();
 		menu.setSpacing(10);
 		sideBar.getChildren().add(menu);
@@ -543,7 +544,8 @@ public class GrenadeJumperMapEditor extends Application {
 		Button open = new Button("Open (Ctrl+O)");
 		open.setOnAction(new EventHandler<ActionEvent>(){
 			@Override
-			public void handle(ActionEvent event) {
+			public void handle(ActionEvent event){
+				//p = -1;
 				readMapData();
 			}
 		});
@@ -599,7 +601,9 @@ public class GrenadeJumperMapEditor extends Application {
 				else if(!engine.lines.isEmpty()){
 					writeMapData();
 				}
-				engine.readMapData(newValue);			
+				g = null;
+				p = -1;
+				engine.readMapData(newValue);
 			}
 		});
 		menu.getChildren().add(presetMaps);

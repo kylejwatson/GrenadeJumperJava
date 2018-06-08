@@ -1,5 +1,6 @@
 import javax.sound.sampled.Clip;
 import javafx.scene.image.Image;
+import javafx.scene.paint.Color;
 
 public class PhysicsObject extends GameObject{
 	private static final double GRAV = 0.3;
@@ -28,9 +29,12 @@ public class PhysicsObject extends GameObject{
 		collisionResolution();
 		x += velx;
 		y += vely;
-		
+
+		gc.setFill(Color.BLACK);
+		gc.setGlobalAlpha(0.4);
+		gc.fillOval(x-radius+5, y-radius+5, radius*2, radius*2);
+		gc.setGlobalAlpha(1);
 		super.update();
-		//gc.fillOval(x-radius, y-radius, radius*2, radius*2);
 	}
 
 	private void collisionResolution(){
@@ -115,7 +119,7 @@ public class PhysicsObject extends GameObject{
 		return new double[]{(lx1 + t * dx),(ly1 + t * dy),(lx1 + t2 * dx), (ly1 + t2 * dy)};
 		
 	}
-	private double[] closestPoint(double[] line){
+	protected double[] closestPoint(double[] line){
 		double lx1 = line[0];
 		double ly1 = line[1];
 		double lx2 = line[2];

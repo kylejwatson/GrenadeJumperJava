@@ -19,11 +19,12 @@ public class Grenade extends PhysicsObject {
 	private float timer = 0f;
 	private float gfxTimer = 0f;
 	private Clip expl;
+	
 	private static Image graphic; 
 	public Grenade(double x, double y, Engine engine) {
 		super(graphic,x,y, engine);
 		if(graphic == null){
-			graphic = new Image("/res/gren.png");
+			graphic = new Image("/res/gren.png", 30,30,true,false);
 			img = graphic;
 		}
 		try {

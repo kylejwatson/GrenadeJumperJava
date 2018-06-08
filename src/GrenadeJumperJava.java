@@ -33,10 +33,11 @@ public class GrenadeJumperJava extends Application {
 	private Engine engine;
 	private int mapI = 0;
 	private boolean camLock = false;
+	private static final float PAN_SPEED = 5000; 
 
-	/*public static void main(String[] args) {
+	public static void main(String[] args) {
 		launch(args);
-	}*/
+	}
 	void setDevMap(String map){
 		devMap = map;
 	}
@@ -58,12 +59,12 @@ public class GrenadeJumperJava extends Application {
 				if(dist<10)
 					camLock = true;
 				else if(dist < 100){
-					engine.cam.x -= xvec*(dist/10000);
-					engine.cam.y -= yvec*(dist/10000);
+					engine.cam.x -= xvec*(dist/PAN_SPEED);
+					engine.cam.y -= yvec*(dist/PAN_SPEED);
 				}else{
 					//System.out.println(dist);
-					engine.cam.x -= xvec/100;
-					engine.cam.y -= yvec/100;
+					engine.cam.x -= xvec/(PAN_SPEED/100);
+					engine.cam.y -= yvec/(PAN_SPEED/100);
 				}
 			}
 			if(player.reachGoal()){
@@ -79,17 +80,25 @@ public class GrenadeJumperJava extends Application {
 		} 
 	};
 	
-	private EventHandler<MouseEvent> clickHandler = new EventHandler<MouseEvent>(){
+	private EventHandler<MouseEvent> clickDownHandler = new EventHandler<MouseEvent>(){
 		@Override
 		public void handle(MouseEvent mouseEvent){
 			if(camLock)
-				player.mouseDown(mouseEvent);
+				player.mouseDown(mouseEvent, true);
+		}
+	};
+	private EventHandler<MouseEvent> clickUpHandler = new EventHandler<MouseEvent>(){
+		@Override
+		public void handle(MouseEvent mouseEvent){
+			if(camLock)
+				player.mouseDown(mouseEvent, false);
 		}
 	};
 	private EventHandler<MouseEvent> moveHandler = new EventHandler<MouseEvent>(){
 		@Override
 		public void handle(MouseEvent event) {
-			player.mouseMove(event);
+			if(camLock)
+				player.mouseMove(event);
 		}
 	};
 	private EventHandler<KeyEvent> keyDownHandler = new EventHandler<KeyEvent>(){
@@ -156,6 +165,7 @@ public class GrenadeJumperJava extends Application {
 		player.x = engine.resp.x;
 		player.y = engine.resp.y;
 		engine.list.add(player);
+		player.addSprites();
 	}
 	@Override
 	public void stop(){
@@ -176,7 +186,8 @@ public class GrenadeJumperJava extends Application {
 		
 		Canvas canvas = new Canvas(scene.getWidth(),scene.getHeight());
 		root.getChildren().add(canvas);
-		canvas.setOnMouseClicked(clickHandler);
+		canvas.setOnMousePressed(clickDownHandler);
+		canvas.setOnMouseReleased(clickUpHandler);
 		canvas.setOnMouseMoved(moveHandler);
 		scene.setOnKeyPressed(keyDownHandler);
 		scene.setOnKeyReleased(keyUpHandler);
