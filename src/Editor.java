@@ -30,7 +30,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.stage.WindowEvent;
 
-public class GrenadeJumperMapEditor extends Application {
+public class Editor extends Application {
 	private Engine engine = new Engine();
 	private boolean ctrl = false;
 	private ArrayList<Double> newPoly = new ArrayList<Double>();

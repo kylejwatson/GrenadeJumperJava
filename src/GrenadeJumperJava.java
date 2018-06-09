@@ -13,9 +13,11 @@ import javax.sound.sampled.UnsupportedAudioFileException;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
+import javafx.scene.image.Image;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
@@ -26,14 +28,18 @@ public class GrenadeJumperJava extends Application {
 	private Clip clip;
 	private Clip intro;
 	private Clip loop;
-	private String[] maps = new String[]{"res/metalLevel1","res/introToMat","res/myMap1.txt","res/myMap2.txt"};
+	private String[] maps = new String[]{"res/menu map","res/levelselect","res/metalLevel1","res/introToMat","res/myMap1.txt","res/myMap2.txt"};
 	private ArrayList<Goal> goals = new ArrayList<Goal>();
 	public String devMap;
 	private Player player;
 	private Engine engine;
 	private int mapI = 0;
 	private boolean camLock = false;
-	private static final float PAN_SPEED = 5000; 
+	private static final float PAN_SPEED = 5000;
+	private boolean inMenu = false;
+	private Button[] mainButtons = new Button[2];
+	private Button[] levelButtons = new Button[4];
+	private Button[] buttons = new Button[2];
 
 	public static void main(String[] args) {
 		launch(args);
@@ -45,44 +51,54 @@ public class GrenadeJumperJava extends Application {
 		@Override
 		public void handle(long now) {
 			engine.update();
-			if(camLock)
-				engine.moveCam(player.x, player.y);
-			else{
-				engine.cam.x += engine.hWidth;
-				engine.cam.y += engine.hHeight;
-				double dist = player.getDistance(engine.cam);
-				engine.cam.x -= engine.hWidth;
-				engine.cam.y -= engine.hHeight;
-				double xvec = goals.get(0).x - player.x;
-				double yvec = goals.get(0).y - player.y;
-				//engine.gc.strokeLine(500, 315, 500-xvec/20, 315-yvec/20);
-				if(dist<10)
-					camLock = true;
-				else if(dist < 100){
-					engine.cam.x -= xvec*(dist/PAN_SPEED);
-					engine.cam.y -= yvec*(dist/PAN_SPEED);
+			if(inMenu){
+				for(Button b : buttons){
+					b.update();
+				}
+			}else{
+				if(camLock){
+					engine.moveCam(player.x, player.y);
+					if(player.reachGoal()){
+						if(!clip.isRunning()){
+							clip.setFramePosition(0);
+							clip.start();
+						}
+						mapI = 0;
+						loadMenu(mainButtons);
+					}
 				}else{
-					//System.out.println(dist);
-					engine.cam.x -= xvec/(PAN_SPEED/100);
-					engine.cam.y -= yvec/(PAN_SPEED/100);
+					engine.cam.x += engine.hWidth;
+					engine.cam.y += engine.hHeight;
+					double dist = player.getDistance(engine.cam);
+					engine.cam.x -= engine.hWidth;
+					engine.cam.y -= engine.hHeight;
+					double xvec = goals.get(0).x - player.x;
+					double yvec = goals.get(0).y - player.y;
+					//engine.gc.strokeLine(500, 315, 500-xvec/20, 315-yvec/20);
+					if(dist<10)
+						camLock = true;
+					else if(dist < 100){
+						engine.cam.x -= xvec*(dist/PAN_SPEED);
+						engine.cam.y -= yvec*(dist/PAN_SPEED);
+					}else{
+						//System.out.println(dist);
+						engine.cam.x -= xvec/(PAN_SPEED/100);
+						engine.cam.y -= yvec/(PAN_SPEED/100);
+					}
 				}
 			}
-			if(player.reachGoal()){
-				if(!clip.isRunning()){
-					clip.setFramePosition(0);
-					clip.start();
-				}
-				mapI++;
-				if(mapI == maps.length)
-					mapI = 0;
-				reload();
-			}
-		} 
+		}
 	};
-	
+
 	private EventHandler<MouseEvent> clickDownHandler = new EventHandler<MouseEvent>(){
 		@Override
 		public void handle(MouseEvent mouseEvent){
+			if(inMenu){
+				double mx = mouseEvent.getX();
+				double my = mouseEvent.getY();
+				for(Button b : buttons)
+					b.mouseDown(mx,my);
+			}
 			if(camLock)
 				player.mouseDown(mouseEvent, true);
 		}
@@ -90,6 +106,12 @@ public class GrenadeJumperJava extends Application {
 	private EventHandler<MouseEvent> clickUpHandler = new EventHandler<MouseEvent>(){
 		@Override
 		public void handle(MouseEvent mouseEvent){
+			if(inMenu){
+				double mx = mouseEvent.getX();
+				double my = mouseEvent.getY();
+				for(Button b : buttons)
+					b.mouseUp(mx,my);
+			}
 			if(camLock)
 				player.mouseDown(mouseEvent, false);
 		}
@@ -116,7 +138,7 @@ public class GrenadeJumperJava extends Application {
 
 				double  x = rand.nextDouble()*engine.hWidth*2-engine.hWidth;
 				double  y = rand.nextDouble()*engine.hHeight*2-engine.hHeight;
-				if(camLock)
+				if(camLock && inMenu)
 					player.throwNade(x, y);
 				break;
 			case R:
@@ -124,12 +146,12 @@ public class GrenadeJumperJava extends Application {
 				break;
 			case ESCAPE:
 				break;
-			//case 1 2 and 3 for material
+				//case 1 2 and 3 for material
 			default:
 				System.out.println(arg0.getCode());
 			}
 		}
-		
+
 	};
 	private EventHandler<KeyEvent> keyUpHandler = new EventHandler<KeyEvent>(){
 		@Override
@@ -143,7 +165,7 @@ public class GrenadeJumperJava extends Application {
 			}
 			engine.keyUp(arg0.getCode());
 		}
-		
+
 	};
 	void reload() {
 		System.out.println(devMap);
@@ -167,9 +189,27 @@ public class GrenadeJumperJava extends Application {
 		engine.list.add(player);
 		player.addSprites();
 	}
+	void loadMenu(Button[] mbuttons){
+		reload();
+		if(devMap == null){
+			buttons = mbuttons;
+			for(Button b : mbuttons){
+				b.x -= engine.hWidth*1.5+b.img.getWidth()/2;
+				b.y -= engine.hHeight*1.5+b.img.getHeight()/2;
+				engine.lines.add(new double[]{b.x,b.y,b.x+b.img.getWidth(),b.y,b.x+b.img.getWidth(),b.y+b.img.getHeight(),b.x,b.y+b.img.getHeight()});
+				engine.polyMat.add(0d);
+				b.x += engine.hWidth*1.5+b.img.getWidth()/2;
+				b.y += engine.hHeight*1.5+b.img.getHeight()/2;
+			}
+			engine.moveCam(-engine.hWidth/2, -engine.hHeight/2);
+			inMenu = true;
+			camLock = true;
+		}
+	}
 	@Override
 	public void stop(){
 		System.out.println("main exit");
+		Platform.exit();
 	}
 	@Override
 	public void start(Stage stage) throws Exception {
@@ -183,7 +223,7 @@ public class GrenadeJumperJava extends Application {
 			stage.setScene(scene);
 		}
 		stage.show();
-		
+
 		Canvas canvas = new Canvas(scene.getWidth(),scene.getHeight());
 		root.getChildren().add(canvas);
 		canvas.setOnMousePressed(clickDownHandler);
@@ -193,32 +233,75 @@ public class GrenadeJumperJava extends Application {
 		scene.setOnKeyReleased(keyUpHandler);
 		engine = new Engine();
 		engine.start(canvas);
+		mainButtons[0] = new Button(new Image("/res/play.png"),engine.hWidth,engine.hHeight-100,engine.gc){
+			@Override
+			public void clickFunc() {
+				mapI = 1;
+				loadMenu(levelButtons);
+			}
+		};
+		mainButtons[1] = new Button(new Image("/res/quit.png"),engine.hWidth,engine.hHeight+100,engine.gc){
+			@Override
+			public void clickFunc() {
+				stop();
+			}
+		};
+		levelButtons[0] = new Button(new Image("/res/1.png"),engine.hWidth-100,engine.hHeight-100,engine.gc){
+			@Override
+			public void clickFunc() {
+				inMenu = false;
+				mapI = 2;
+				reload();
+			}
+		};
+		levelButtons[1] = new Button(new Image("/res/2.png"),engine.hWidth+100,engine.hHeight-100,engine.gc){
+			@Override
+			public void clickFunc() {
+				inMenu = false;
+				mapI = 3;
+				reload();
+			}
+		};
+		levelButtons[2] = new Button(new Image("/res/3.png"),engine.hWidth-100,engine.hHeight+100,engine.gc){
+			@Override
+			public void clickFunc() {
+				inMenu = false;
+				mapI = 4;
+				reload();
+			}
+		};
+		levelButtons[3] = new Button(new Image("/res/4.png"),engine.hWidth+100,engine.hHeight+100,engine.gc){
+			@Override
+			public void clickFunc() {
+				inMenu = false;
+				mapI = 5;
+				reload();
+			}
+		};
 		//engine.bgs[0] = new GameObject(new Image("/res/backtometal.png"), 0,0);
-		
-		
-		reload();
+		loadMenu(mainButtons);
 		try {
 			clip = AudioSystem.getClip();
 			URL url = this.getClass().getResource("/res/goal.wav");
-	        AudioInputStream inputStream = AudioSystem.getAudioInputStream(url);
-	        clip.open(inputStream);
+			AudioInputStream inputStream = AudioSystem.getAudioInputStream(url);
+			clip.open(inputStream);
 			intro = AudioSystem.getClip();
 			url = this.getClass().getResource("/res/intro.wav");
-	        inputStream = AudioSystem.getAudioInputStream(url);
-	        intro.open(inputStream);
-	        intro.addLineListener(new LineListener(){
+			inputStream = AudioSystem.getAudioInputStream(url);
+			intro.open(inputStream);
+			intro.addLineListener(new LineListener(){
 				@Override
 				public void update(LineEvent arg0) {
 					if(arg0.getType() == LineEvent.Type.STOP){
 						loop.loop(Clip.LOOP_CONTINUOUSLY);
-				        System.out.println("llop");
+						System.out.println("llop");
 					}
 				}
-	        });
+			});
 			loop = AudioSystem.getClip();
 			url = this.getClass().getResource("/res/loop.wav");
-	        inputStream = AudioSystem.getAudioInputStream(url);
-	        loop.open(inputStream);
+			inputStream = AudioSystem.getAudioInputStream(url);
+			loop.open(inputStream);
 		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
 			e.printStackTrace();
 		}

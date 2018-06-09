@@ -42,5 +42,4 @@ public class GameObject {
 				animCounter = 0;
 		}
 	}
-
 }

@@ -211,7 +211,7 @@ public class Player extends PhysicsObject {
 
 	public void throwNade(double x, double y){
 		double vecx = engine.hWidth - x;
-		double vecy = engine.hHeight -y;
+		double vecy = engine.hHeight - y;
 		double dist = Math.sqrt(vecx*vecx+vecy*vecy);
 		vecx = vecx/dist;
 		vecy = vecy/dist;
