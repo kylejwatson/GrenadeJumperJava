@@ -51,11 +51,14 @@ public class Grenade extends PhysicsObject {
 		timer+=0.02;
 		if(timer>DETONATE_TIME){
 			explode();
-			if(gfxTimer != 0){
-				gc.setFill(Color.YELLOW);
-				gc.fillOval(x-BLAST_RADIUS, y-BLAST_RADIUS, BLAST_RADIUS*2, BLAST_RADIUS*2);
-			}
 		}
+	}
+	public void draw(){
+		if(gfxTimer != 0){
+			gc.setFill(Color.YELLOW);
+			gc.fillOval(x-BLAST_RADIUS, y-BLAST_RADIUS, BLAST_RADIUS*2, BLAST_RADIUS*2);
+		}
+		super.draw();
 	}
 	
 	private void explode(){
@@ -94,8 +97,8 @@ public class Grenade extends PhysicsObject {
 							poly[i] += distx*EXPLOSION_FORCE/material;
 							poly[i+1] += disty*EXPLOSION_FORCE/material;
 							//movedVert[i/2] = true;
-							System.out.println(i);
-							System.out.println(i/2);
+							//System.out.println(i);
+							//System.out.println(i/2);
 						}
 					}
 					double oRadius = radius;
@@ -111,8 +114,8 @@ public class Grenade extends PhysicsObject {
 							newPoly.add(poly[i]);
 							newPoly.add(poly[i+1]);
 							if(!movedVert[i/2] && !movedVert[i2/2]){
-								System.out.println(i);
-								System.out.println(i/2);
+								//System.out.println(i);
+								//System.out.println(i/2);
 								double distx = poly[i]-poly[i2];
 								double disty = poly[i+1]-poly[i2+1];
 								double length = Math.sqrt(distx*distx+disty*disty);

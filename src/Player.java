@@ -42,28 +42,18 @@ public class Player extends PhysicsObject {
 		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
 			e.printStackTrace();
 		}
+
+		mouthOpen = new Image("/res/char-anim/mouth.png",20,20,true,false);
+		mouthClosed = new Image("/res/char-anim/mouth.png");
+		mouth = new GameObject(mouthClosed,px,py,engine.gc);
 	}
 	
 	public void addSprites(){
-		if(mouth == null){
-			mouthOpen = new Image("/res/char-anim/mouth.png",20,20,true,false);
-			mouthClosed = new Image("/res/char-anim/mouth.png");
-			mouth = new GameObject(mouthClosed,px,py,engine.gc);
-			engine.list.add(mouth);
-		}
+		engine.addList.add(mouth);
 	}
 
 	public void update(){
 		keyInput();
-		gc.setStroke(Color.web("0x3cb878"));
-		gc.setLineWidth(5);
-		gc.setLineCap(StrokeLineCap.ROUND);
-		gc.beginPath();
-		gc.moveTo(x, y);
-		gc.lineTo(l0[0], l0[1]);
-		gc.moveTo(x, y);
-		gc.lineTo(l1[0], l1[1]);
-		gc.stroke();
 		
 		super.update();
 		
@@ -91,6 +81,20 @@ public class Player extends PhysicsObject {
 //			super.update();
 //			gc.restore();
 //		}else
+	}
+	
+	public void draw(){
+
+		gc.setStroke(Color.web("0x3cb878"));
+		gc.setLineWidth(5);
+		gc.setLineCap(StrokeLineCap.ROUND);
+		gc.beginPath();
+		gc.moveTo(x, y);
+		gc.lineTo(l0[0], l0[1]);
+		gc.moveTo(x, y);
+		gc.lineTo(l1[0], l1[1]);
+		gc.stroke();
+		super.draw();
 	}
 
 	public void keyInput(){
@@ -234,7 +238,7 @@ public class Player extends PhysicsObject {
 //					}
 //				}
 //			}
-		engine.list.add(g);
+		engine.addList.add(g);
 	}
 	
 	public void mouseDown(MouseEvent me, boolean open){

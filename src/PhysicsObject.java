@@ -30,11 +30,15 @@ public class PhysicsObject extends GameObject{
 		x += velx;
 		y += vely;
 
+		super.update();
+	}
+	
+	public void draw(){
 		gc.setFill(Color.BLACK);
 		gc.setGlobalAlpha(0.4);
 		gc.fillOval(x-radius+5, y-radius+5, radius*2, radius*2);
 		gc.setGlobalAlpha(1);
-		super.update();
+		super.draw();
 	}
 
 	private void collisionResolution(){

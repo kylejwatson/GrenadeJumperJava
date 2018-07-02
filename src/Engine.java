@@ -6,6 +6,8 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -25,6 +27,7 @@ public class Engine {
 	ArrayList<GameObject> list = new ArrayList<GameObject>();
 	ArrayList<Double> polyMat = new ArrayList<Double>();
 	ArrayList<GameObject> delList = new ArrayList<GameObject>();
+	ArrayList<GameObject> addList = new ArrayList<GameObject>();
 	private Color dirt = Color.web("0x947f7b");
 	//private ImagePattern dirt = new ImagePattern(new Image("/res/dirt.jpg"),0,0,200,200,false);
 	//private ImagePattern brick = new ImagePattern(new Image("/res/brick.jpg"),0,0,100,100,false);
@@ -42,6 +45,11 @@ public class Engine {
 	Image[] pBackImg = new Image[]{null,new Image("/res/metalParral.png")};
 	GameObject staticBack;
 	GameObject paralaxBack;
+	private long lastTime;
+	private double avgFps;
+	private int frameCounter = 0;
+	private double totalFps;
+	
 	public Engine() {
 	}
 
@@ -51,24 +59,29 @@ public class Engine {
 	}
 
 	public void update() {
-		gc.setFill(Color.WHITE);
-		gc.fillRect(0,0,hWidth*2,hHeight*2);
-		gc.setFill(Color.BLACK);
-		gc.save();
-		gc.translate(-cam.x/4, -cam.y/4);
-		if(paralaxBack.img != null){
-			paralaxBack.update();
-		}
-		gc.restore();
-		gc.save();
-		gc.translate(-cam.x, -cam.y);
-		if(staticBack.img != null){
-			staticBack.update();
-		}
+		try{
+		for(GameObject obj : addList)
+			list.add(obj);
+		addList.clear();
 		for(GameObject obj : list)
 			obj.update();
 		for(GameObject obj : delList)
 			list.remove(obj);
+		delList.clear();
+		}catch(InternalError e){
+			System.out.println("test error");
+			e.printStackTrace();
+		}
+	} 
+	
+	public void draw(long now){
+		gc.setFill(Color.WHITE);
+		gc.fillRect(0,0,hWidth*2,hHeight*2);
+		gc.setFill(Color.BLACK);
+		gc.save();
+		gc.translate(-cam.x, -cam.y);
+		for(GameObject obj : list)
+			obj.draw();
 		delList.clear();
 		int polyCount = 0;
 		String[] content = new String[lines.size()];
@@ -91,18 +104,24 @@ public class Engine {
 			//svg.setContent(content)
 			content[k] += polyMat.get(k);
 		}
-		gc.save();
-		gc.translate(10, 10);
-		for(String s: content){
-			s = s.substring(0, s.length()-3);
-			gc.beginPath();
-			gc.appendSVGPath(s);
-			gc.closePath();
-			gc.setFill(Color.BLACK);
-			gc.setGlobalAlpha(0.2);
-			gc.fill();
-		}
-		gc.restore();
+		/*
+		
+		
+		//#shadow code!!!!!!!!!!!!!!!!#///
+		 * 
+		 */
+//		gc.save();
+//		gc.translate(10, 10);
+//		for(String s: content){
+//			s = s.substring(0, s.length()-3);
+//			gc.beginPath();
+//			gc.appendSVGPath(s);
+//			gc.closePath();
+//			gc.setFill(Color.BLACK);
+//			gc.setGlobalAlpha(0.2);
+//			gc.fill();
+//		}
+//		gc.restore();
 		for(String s: content){
 			double c = Double.valueOf(s.substring(s.length()-3));
 			if(c>3)
@@ -120,8 +139,18 @@ public class Engine {
 			gc.fill();
 		}
 		gc.restore();
+		double fps = 1000000000.0 / (now - lastTime);
+		lastTime = now;
+		totalFps += fps;
+		frameCounter++;
+		if(frameCounter > 7){
+			avgFps = totalFps/8;
+			frameCounter = 0;
+			totalFps = 0;
+		}
 		gc.strokeText("Edge Count: " + polyCount, 30, 30);
-	} 
+		gc.strokeText("FPS: " + avgFps, 30, 50);
+	}
 
 	public void readMapData(String path){
 		a = false;
@@ -253,9 +282,8 @@ public class Engine {
 		Goal.graphic = new Image("/res/goal.png");
 		new Grenade(0,0,this);
 		resp = new Respawn(0,0,gc);
-		staticBack = new GameObject(null,0,0,gc);
-		paralaxBack = new GameObject(null,0,0,gc);
 		moveCam(resp.x, resp.y);
+		//updateThread.start();
 	}
 	void keyDown(KeyCode code) {
 		switch(code){

@@ -7,9 +7,9 @@ public class Respawn extends GameObject {
 		super(new Image("/res/resp.png"), x, y,gc);
 	}
 	
-	public void update(){
+	public void draw(){
 		gc.strokeOval(x-radius,y-radius,radius*2,radius*2);
-		super.update();
+		super.draw();
 	}
 
 }

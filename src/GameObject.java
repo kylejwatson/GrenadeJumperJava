@@ -32,7 +32,9 @@ public class GameObject {
 		return Math.sqrt(Math.pow(x-point[0],2d)+Math.pow(y-point[1],2d));
 	}
 	
-	public void update(){
+	public void update(){};
+	
+	public void draw(){
 		if(anim == null)
 			gc.drawImage(img, x-img.getWidth()/2, y-(img.getHeight()/2)-offsety);
 		else{

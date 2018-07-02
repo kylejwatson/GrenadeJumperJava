@@ -7,9 +7,24 @@ public class Goal extends GameObject {
 	private double rot = 0;
 	private double dis = 30;
 	private double dir = 0.5;
+	private double dirx = 0;
+	private double diry = 0;
 	public Goal(double x, double y,GraphicsContext gc) {
 		super(graphic, x, y,gc);
 		eye = new Image("/res/goaleye.png");
+	}
+	
+	public void draw(){
+		gc.drawImage(eye, x+dirx-3, y+diry-3);
+		gc.drawImage(eye, x-dirx-3, y+diry-3);
+		gc.drawImage(eye, x-dirx-3, y-diry-3);
+		gc.drawImage(eye, x+dirx-3, y-diry-3);
+		gc.drawImage(eye, x+diry-3, y+dirx-3);
+		gc.drawImage(eye, x-diry-3, y+dirx-3);
+		gc.drawImage(eye, x-diry-3, y-dirx-3);
+		gc.drawImage(eye, x+diry-3, y-dirx-3);
+		super.draw();
+		//gc.fillRect(x-3, y-3, 10, 10);
 	}
 	
 	public void update(){
@@ -21,18 +36,9 @@ public class Goal extends GameObject {
 		else if(dis < 30)
 			dir = 0.5;
 		
-		double dirx = Math.cos(rot)*dis;
-		double diry = Math.sin(rot)*dis;
-		gc.drawImage(eye, x+dirx-3, y+diry-3);
-		gc.drawImage(eye, x-dirx-3, y+diry-3);
-		gc.drawImage(eye, x-dirx-3, y-diry-3);
-		gc.drawImage(eye, x+dirx-3, y-diry-3);
-		gc.drawImage(eye, x+diry-3, y+dirx-3);
-		gc.drawImage(eye, x-diry-3, y+dirx-3);
-		gc.drawImage(eye, x-diry-3, y-dirx-3);
-		gc.drawImage(eye, x+diry-3, y-dirx-3);
-		super.update();
-		//gc.fillRect(x-3, y-3, 10, 10);
+		dirx = Math.cos(rot)*dis;
+		diry = Math.sin(rot)*dis;
+		super.draw();
 	}
 
 }

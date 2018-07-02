@@ -40,9 +40,69 @@ public class GrenadeJumperJava extends Application {
 	private Button[] mainButtons = new Button[2];
 	private Button[] levelButtons = new Button[4];
 	private Button[] buttons = new Button[2];
+	public class MyRunnable extends Thread {
+		private boolean running = true;
+	    public void run() {
+	    	while(running){
+				update();
+				try {
+					sleep(20);
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				//System.out.println("new loop");
+			}
+	    }
+	    public void close(){
+	    	running = false;
+	    }
+	}
+	private MyRunnable thread = new MyRunnable();
+	private Thread updateThread = new Thread(thread);
 
 	public static void main(String[] args) {
 		launch(args);
+	}
+	protected void update() {
+		engine.update();
+		if(inMenu){
+			for(Button b : buttons){
+				b.update();
+			}
+		}else{
+			if(camLock){
+				engine.moveCam(player.x, player.y);
+				if(player.reachGoal()){
+					if(!clip.isRunning()){
+						clip.setFramePosition(0);
+						clip.start();
+					}
+					mapI = 0;
+					loadMenu(mainButtons);
+				}
+			}else{
+				engine.cam.x += engine.hWidth;
+				engine.cam.y += engine.hHeight;
+				double dist = player.getDistance(engine.cam);
+				engine.cam.x -= engine.hWidth;
+				engine.cam.y -= engine.hHeight;
+				double xvec = goals.get(0).x - player.x;
+				double yvec = goals.get(0).y - player.y;
+				//engine.gc.strokeLine(500, 315, 500-xvec/20, 315-yvec/20);
+				if(dist<10)
+					camLock = true;
+				else if(dist < 100){
+					engine.cam.x -= xvec*(dist/PAN_SPEED);
+					engine.cam.y -= yvec*(dist/PAN_SPEED);
+				}else{
+					//System.out.println(dist);
+					engine.cam.x -= xvec/(PAN_SPEED/100);
+					engine.cam.y -= yvec/(PAN_SPEED/100);
+				}
+			}
+		}
+		
 	}
 	void setDevMap(String map){
 		devMap = map;
@@ -50,43 +110,13 @@ public class GrenadeJumperJava extends Application {
 	public AnimationTimer timer = new AnimationTimer() {
 		@Override
 		public void handle(long now) {
-			engine.update();
+			engine.draw(now);
 			if(inMenu){
 				for(Button b : buttons){
-					b.update();
-				}
-			}else{
-				if(camLock){
-					engine.moveCam(player.x, player.y);
-					if(player.reachGoal()){
-						if(!clip.isRunning()){
-							clip.setFramePosition(0);
-							clip.start();
-						}
-						mapI = 0;
-						loadMenu(mainButtons);
-					}
-				}else{
-					engine.cam.x += engine.hWidth;
-					engine.cam.y += engine.hHeight;
-					double dist = player.getDistance(engine.cam);
-					engine.cam.x -= engine.hWidth;
-					engine.cam.y -= engine.hHeight;
-					double xvec = goals.get(0).x - player.x;
-					double yvec = goals.get(0).y - player.y;
-					//engine.gc.strokeLine(500, 315, 500-xvec/20, 315-yvec/20);
-					if(dist<10)
-						camLock = true;
-					else if(dist < 100){
-						engine.cam.x -= xvec*(dist/PAN_SPEED);
-						engine.cam.y -= yvec*(dist/PAN_SPEED);
-					}else{
-						//System.out.println(dist);
-						engine.cam.x -= xvec/(PAN_SPEED/100);
-						engine.cam.y -= yvec/(PAN_SPEED/100);
-					}
+					b.draw();
 				}
 			}
+			
 		}
 	};
 
@@ -138,7 +168,7 @@ public class GrenadeJumperJava extends Application {
 
 				double  x = rand.nextDouble()*engine.hWidth*2-engine.hWidth;
 				double  y = rand.nextDouble()*engine.hHeight*2-engine.hHeight;
-				if(camLock && inMenu)
+				if(camLock )
 					player.throwNade(x, y);
 				break;
 			case R:
@@ -148,7 +178,7 @@ public class GrenadeJumperJava extends Application {
 				break;
 				//case 1 2 and 3 for material
 			default:
-				System.out.println(arg0.getCode());
+				//System.out.println(arg0.getCode());
 			}
 		}
 
@@ -186,7 +216,7 @@ public class GrenadeJumperJava extends Application {
 		player = new Player(100,100,engine);
 		player.x = engine.resp.x;
 		player.y = engine.resp.y;
-		engine.list.add(player);
+		engine.addList.add(player);
 		player.addSprites();
 	}
 	void loadMenu(Button[] mbuttons){
@@ -209,6 +239,8 @@ public class GrenadeJumperJava extends Application {
 	@Override
 	public void stop(){
 		System.out.println("main exit");
+		loop.close();
+		thread.close();
 		Platform.exit();
 	}
 	@Override
@@ -311,5 +343,6 @@ public class GrenadeJumperJava extends Application {
 		}
 		loop.loop(Clip.LOOP_CONTINUOUSLY);
 		timer.start();
+		updateThread.start();
 	}
 }
