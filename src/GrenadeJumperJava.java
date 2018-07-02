@@ -299,7 +299,7 @@ public class GrenadeJumperJava extends Application {
 				}
 			});
 			loop = AudioSystem.getClip();
-			url = this.getClass().getResource("/res/loop.wav");
+			url = this.getClass().getResource("/res/cyberpunk.wav");
 			inputStream = AudioSystem.getAudioInputStream(url);
 			loop.open(inputStream);
 		} catch (LineUnavailableException | UnsupportedAudioFileException | IOException e) {
@@ -309,6 +309,7 @@ public class GrenadeJumperJava extends Application {
 			intro.setFramePosition(0);
 			//intro.start();
 		}
+		loop.loop(Clip.LOOP_CONTINUOUSLY);
 		timer.start();
 	}
 }
